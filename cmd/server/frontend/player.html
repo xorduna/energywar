@@ -378,82 +378,85 @@
             }
             
             // Function to update the player's board display
-            function updatePlayerBoard() {
-                // Clear all cell classes and images
-                $('#player-board .cell').removeClass('hit miss normal plant-container plant-working plant-damaged').empty();
-                
-                // Update capacity display
-                $('#player-capacity').text(`Capacity: ${playerBoard.capacity} / ${playerBoard.total_capacity}`);
-                
-                // Create a map of coordinates to plant types
-                const plantMap = {};
-                const plantCells = {};
-                
-                // Ensure plants is initialized
-                if (!playerBoard.plants) {
-                    playerBoard.plants = [];
-                }
-                
-                // Process plants
-                playerBoard.plants.forEach(plant => {
-                    const plantType = plant.type.toLowerCase();
-                    const plantCoords = [];
+            function updatePlayerBoard(forceRefresh = false) {
+                // Only refresh the board if the game is in progress or if forceRefresh is true
+                if ((gameData && gameData.status !== 'PENDING') || forceRefresh) {
+                    // Clear all cell classes and images
+                    $('#player-board .cell').removeClass('hit miss normal plant-container plant-working plant-damaged').empty();
                     
-                    plant.coordinates.forEach(coord => {
-                        plantMap[coord] = plantType;
-                        plantCoords.push(coord);
-                    });
+                    // Update capacity display
+                    $('#player-capacity').text(`Capacity: ${playerBoard.capacity} / ${playerBoard.total_capacity}`);
                     
-                    plantCells[plantType] = plantCells[plantType] || [];
-                    plantCells[plantType].push(plantCoords);
-                });
-                
-                // First, add all plant images and containers
-                for (const [coord, plantType] of Object.entries(plantMap)) {
-                    const cell = $(`#player-board .cell[data-coord="${coord}"]`);
-                    if (cell.length) {
-                        cell.html(`<img src="assets/img/${plantType}.png" alt="${plantType}">`);
-                        cell.addClass('plant-container normal');
+                    // Create a map of coordinates to plant types
+                    const plantMap = {};
+                    const plantCells = {};
+                    
+                    // Ensure plants is initialized
+                    if (!playerBoard.plants) {
+                        playerBoard.plants = [];
                     }
-                }
-                
-                // Then mark hits and misses
-                if (playerBoard.hits) {
-                    playerBoard.hits.forEach(coord => {
-                        const cell = $(`#player-board .cell[data-coord="${coord}"]`);
-                        if (cell.length) {
-                            cell.removeClass('normal').addClass('hit');
-                        }
-                    });
-                }
-                
-                if (playerBoard.misses) {
-                    playerBoard.misses.forEach(coord => {
-                        const cell = $(`#player-board .cell[data-coord="${coord}"]`);
-                        if (cell.length) {
-                            cell.removeClass('normal').addClass('miss');
-                        }
-                    });
-                }
-                
-                // Finally, add working/damaged status to plants
-                for (const [plantType, plantGroups] of Object.entries(plantCells)) {
-                    plantGroups.forEach(plantCoords => {
-                        // Check if any cell in this plant is hit
-                        const isHit = playerBoard.hits && plantCoords.some(coord => playerBoard.hits.includes(coord));
+                    
+                    // Process plants
+                    playerBoard.plants.forEach(plant => {
+                        const plantType = plant.type.toLowerCase();
+                        const plantCoords = [];
                         
-                        // Add status classes to all cells in this plant
-                        plantCoords.forEach(coord => {
+                        plant.coordinates.forEach(coord => {
+                            plantMap[coord] = plantType;
+                            plantCoords.push(coord);
+                        });
+                        
+                        plantCells[plantType] = plantCells[plantType] || [];
+                        plantCells[plantType].push(plantCoords);
+                    });
+                    
+                    // First, add all plant images and containers
+                    for (const [coord, plantType] of Object.entries(plantMap)) {
+                        const cell = $(`#player-board .cell[data-coord="${coord}"]`);
+                        if (cell.length) {
+                            cell.html(`<img src="assets/img/${plantType}.png" alt="${plantType}">`);
+                            cell.addClass('plant-container normal');
+                        }
+                    }
+                    
+                    // Then mark hits and misses
+                    if (playerBoard.hits) {
+                        playerBoard.hits.forEach(coord => {
                             const cell = $(`#player-board .cell[data-coord="${coord}"]`);
                             if (cell.length) {
-                                if (isHit) {
-                                    cell.addClass('plant-damaged');
-                                } else {
-                                    cell.addClass('plant-working');
-                                }
+                                cell.removeClass('normal').addClass('hit');
                             }
                         });
-                    });
+                    }
+                    
+                    if (playerBoard.misses) {
+                        playerBoard.misses.forEach(coord => {
+                            const cell = $(`#player-board .cell[data-coord="${coord}"]`);
+                            if (cell.length) {
+                                cell.removeClass('normal').addClass('miss');
+                            }
+                        });
+                    }
+                    
+                    // Finally, add working/damaged status to plants
+                    for (const [plantType, plantGroups] of Object.entries(plantCells)) {
+                        plantGroups.forEach(plantCoords => {
+                            // Check if any cell in this plant is hit
+                            const isHit = playerBoard.hits && plantCoords.some(coord => playerBoard.hits.includes(coord));
+                            
+                            // Add status classes to all cells in this plant
+                            plantCoords.forEach(coord => {
+                                const cell = $(`#player-board .cell[data-coord="${coord}"]`);
+                                if (cell.length) {
+                                    if (isHit) {
+                                        cell.addClass('plant-damaged');
+                                    } else {
+                                        cell.addClass('plant-working');
+                                    }
+                                }
+                            });
+                        });
+                    }
                 }
             }
             
@@ -528,7 +531,21 @@
                     },
                     error: function(xhr) {
                         console.error('Error fetching game data:', xhr);
-                        showError('Error fetching game data. Please try again.');
+                        
+                        // Check if the game doesn't exist
+                        if (xhr.status === 404) {
+                            showError('Game not found. Please check the game ID and try again.');
+                            continuePolling = false; // Stop polling
+                            
+                            // Hide setup controls and boards
+                            $('#setup-controls').hide();
+                            $('.boards-container').hide();
+                            
+                            // Show a button to go back to home
+                            $('.home-link').show();
+                        } else {
+                            showError('Error fetching game data. Please try again.');
+                        }
                     }
                 });
             }
@@ -538,16 +555,27 @@
                 if (status === 'PENDING') {
                     // Show setup controls if player is not ready
                     if (!isPlayerReady) {
+                        // Show setup controls and hide opponent's board
                         $('#setup-controls').show();
                         $('#strike-controls').hide();
+                        
+                        // Move plant selector to opponent's board area
+                        $('.board:eq(1) h3').text('Power Plant Selection');
+                        $('.board:eq(1) #opponent-board').hide();
+                        $('.board:eq(1) #opponent-capacity').hide();
+                        $('.plant-selector').appendTo('.board:eq(1)');
+                        $('#orientation-selector').appendTo('.board:eq(1)');
                     } else {
                         $('#setup-controls').hide();
                         $('#strike-controls').hide();
                         showSuccess('Waiting for opponent to be ready...');
                     }
                 } else if (status === 'IN_PROGRESS') {
-                    // Hide setup controls, show strike controls
+                    // Hide setup controls, show opponent's board
                     $('#setup-controls').hide();
+                    $('.board:eq(1) h3').text('Opponent\'s Board');
+                    $('.board:eq(1) #opponent-board').show();
+                    $('.board:eq(1) #opponent-capacity').show();
                     
                     // Show strike controls only if it's player's turn
                     if (turn === playerName) {
@@ -572,6 +600,11 @@
             
             // Function to fetch player's board
             function fetchPlayerBoard() {
+                // Skip fetching if we have unsaved local changes
+                if (playerBoard.plants && playerBoard.plants.length > 0 && !isPlayerReady) {
+                    return;
+                }
+                
                 $.ajax({
                     url: `/api/games/${gameId}/players/${playerName}/board`,
                     type: 'GET',
@@ -725,8 +758,14 @@
                 playerBoard.total_capacity = currentCapacity;
                 playerBoard.capacity = currentCapacity;
                 
-                // Update the board display
-                updatePlayerBoard();
+                // Directly update the DOM with the plant image
+                for (const coord of coordinates) {
+                    const cell = $(`#player-board .cell[data-coord="${coord}"]`);
+                    if (cell.length) {
+                        cell.html(`<img src="assets/img/${type.toLowerCase()}.png" alt="${type}">`);
+                        cell.addClass('plant-container normal plant-working');
+                    }
+                }
                 
                 // Update capacity display
                 $('#current-capacity').text(`Current Capacity: ${currentCapacity}`);
