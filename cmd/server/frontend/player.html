@@ -657,6 +657,10 @@
             function updateReadyButton() {
                 const readyBtn = $('#ready-btn');
                 
+                // Check if the current capacity meets the requirements
+                // The capacity should be at least the required capacity and at most 10% extra
+                console.log(`Current capacity: ${currentCapacity}, Required: ${requiredCapacity}, Max: ${requiredCapacity * 1.1}`);
+                
                 if (currentCapacity >= requiredCapacity && currentCapacity <= requiredCapacity * 1.1) {
                     readyBtn.removeClass('button-disabled');
                 } else {
