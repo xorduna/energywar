@@ -379,8 +379,8 @@
             
             // Function to update the player's board display
             function updatePlayerBoard(forceRefresh = false) {
-                // Only refresh the board if the game is in progress or if forceRefresh is true
-                if ((gameData && gameData.status !== 'PENDING') || forceRefresh) {
+                // Only refresh the board if the game is in progress, if forceRefresh is true, or if the player is ready
+                if ((gameData && gameData.status !== 'PENDING') || forceRefresh || isPlayerReady) {
                     // Clear all cell classes and images
                     $('#player-board .cell').removeClass('hit miss normal plant-container plant-working plant-damaged').empty();
                     
@@ -515,7 +515,9 @@
                             const opponentInfo = data.players[opponentName];
                             
                             // Update capacity requirements
-                            requiredCapacity = data.capacity;
+                            requiredCapacity = data.capacity || 1000; // Default to 1000 if not provided
+                            console.log("Game capacity:", data.capacity);
+                            console.log("Required capacity set to:", requiredCapacity);
                             $('#required-capacity').text(`Required: ${requiredCapacity}`);
                             
                             // Check if player is ready
