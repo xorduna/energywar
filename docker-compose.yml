@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  energywar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    # If you need to add environment variables, you can add them here
+    # environment:
+    #   - KEY=value

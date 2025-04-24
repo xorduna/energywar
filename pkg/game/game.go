@@ -121,7 +121,7 @@ func (gm *GameManager) SetBoard(gameID string, playerName string, board *models.
 	}
 
 	// Check if the total capacity meets the requirements
-	if totalCapacity < game.Capacity || totalCapacity > int(float64(game.Capacity)*1.1) {
+	if totalCapacity < game.Capacity || totalCapacity > int(float64(game.Capacity)*2) {
 		return nil, fmt.Errorf("total capacity should be between %d and %d", game.Capacity, int(float64(game.Capacity)*1.1))
 	}
 
