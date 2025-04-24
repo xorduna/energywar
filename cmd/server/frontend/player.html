@@ -559,12 +559,14 @@
                         $('#setup-controls').show();
                         $('#strike-controls').hide();
                         
-                        // Move plant selector to opponent's board area
+                        // Move plant selector and instructions to opponent's board area
                         $('.board:eq(1) h3').text('Power Plant Selection');
                         $('.board:eq(1) #opponent-board').hide();
                         $('.board:eq(1) #opponent-capacity').hide();
                         $('.plant-selector').appendTo('.board:eq(1)');
                         $('#orientation-selector').appendTo('.board:eq(1)');
+                        $('.instructions').appendTo('.board:eq(1)');
+                        $('.actions').appendTo('.board:eq(1)');
                     } else {
                         $('#setup-controls').hide();
                         $('#strike-controls').hide();
@@ -931,7 +933,9 @@
                 playerBoard.capacity = 0;
                 currentCapacity = 0;
                 
-                updatePlayerBoard();
+                // Clear all cell classes and images
+                $('#player-board .cell').removeClass('hit miss normal plant-container plant-working plant-damaged').empty();
+                
                 $('#current-capacity').text(`Current Capacity: ${currentCapacity}`);
                 updateReadyButton();
             });
@@ -954,13 +958,37 @@
             // Initial update
             updateGameData();
             
-            // Set up polling every second
-            const pollingInterval = setInterval(function() {
-                if (!continuePolling) {
+            // Set up polling
+            let pollingInterval;
+            
+            function startPolling() {
+                // Clear any existing interval
+                if (pollingInterval) {
                     clearInterval(pollingInterval);
-                    return;
                 }
-                updateGameData();
-            }, 1000);
+                
+                // Determine polling frequency based on game status
+                const pollingFrequency = (gameData && gameData.status === 'PENDING') ? 3000 : 1000; // 3 seconds for PENDING, 1 second for IN_PROGRESS
+                
+                pollingInterval = setInterval(function() {
+                    if (!continuePolling) {
+                        clearInterval(pollingInterval);
+                        return;
+                    }
+                    updateGameData();
+                    
+                    // Adjust polling frequency if game status changes
+                    if (gameData) {
+                        const newFrequency = (gameData.status === 'PENDING') ? 3000 : 1000;
+                        if (newFrequency !== pollingFrequency) {
+                            startPolling(); // Restart polling with new frequency
+                        }
+                    }
+                }, pollingFrequency);
+            }
+            
+            // Initial update and start polling
+            updateGameData();
+            startPolling();
         });
     </script>
