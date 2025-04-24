@@ -245,9 +245,8 @@
                 window.location.href = `game.html?id=${gameId}`;
             });
             
-            // Play Game button click handler (no action needed as per requirements)
+            // Play Game button click handler
             $('#play-game-btn').click(function() {
-                // No action needed as per requirements
                 const gameId = $('#play-game-id').val().trim();
                 const playerName = $('#player-name').val().trim();
                 
@@ -256,8 +255,8 @@
                     return;
                 }
                 
-                // Just show a message that this feature is not implemented yet
-                alert('This feature is not implemented yet.');
+                // Redirect to the player page with game ID and player name as query parameters
+                window.location.href = `player.html?id=${gameId}&player=${playerName}`;
             });
         });
     </script>
