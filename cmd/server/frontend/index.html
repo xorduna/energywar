@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy War Game</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -58,9 +59,36 @@
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
+            cursor: pointer;
         }
         .button:hover {
             background-color: #2980b9;
+        }
+        .game-actions {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        .action-row {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .action-row input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+            flex: 1;
+        }
+        #game-id-display {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f4fc;
+            border-radius: 5px;
+            display: none;
         }
     </style>
 </head>
@@ -121,13 +149,33 @@
         <li>The game ends when one player's capacity falls below 10% of the initial capacity.</li>
     </ol>
     
+    <div class="game-actions">
+        <h2>Game Actions</h2>
+        
+        <div class="action-row">
+            <button id="new-game-btn" class="button">New Game</button>
+            <div id="game-id-display"></div>
+        </div>
+        
+        <div class="action-row">
+            <input type="text" id="view-game-id" placeholder="Enter Game ID">
+            <button id="view-game-btn" class="button">View</button>
+        </div>
+        
+        <div class="action-row">
+            <input type="text" id="play-game-id" placeholder="Enter Game ID">
+            <input type="text" id="player-name" placeholder="Enter Player Name">
+            <button id="play-game-btn" class="button">Play</button>
+        </div>
+    </div>    
+
     <h2>API Examples</h2>
     
     <h3>Create a Game</h3>
-    <pre><code>POST /games?size=10&capacity=1000&players=alice,bob</code></pre>
+    <pre><code>POST /api/games?size=10&capacity=1000&players=alice,bob</code></pre>
     
     <h3>Set Up a Board</h3>
-    <pre><code>POST /games/:id/players/:name/board
+    <pre><code>POST /api/games/:id/players/:name/board
 {
   "plants": [
     {
@@ -150,13 +198,68 @@
 }</code></pre>
     
     <h3>Mark Player as Ready</h3>
-    <pre><code>POST /games/:id/players/:name/ready</code></pre>
+    <pre><code>POST /api/games/:id/players/:name/ready</code></pre>
     
     <h3>Strike a Coordinate</h3>
-    <pre><code>POST /games/:id/players/:name/strike?target=opponent&y=A&x=1</code></pre>
+    <pre><code>POST /api/games/:id/players/:name/strike?target=opponent&y=A&x=1</code></pre>
     
     <div class="api-link">
         <a href="/swagger/index.html" class="button">View API Documentation</a>
     </div>
+    
+
+    
+    <script>
+        $(document).ready(function() {
+            // New Game button click handler
+            $('#new-game-btn').click(function() {
+                // Default values for a new game
+                const size = 10;
+                const capacity = 1000;
+                const players = 'alice,bob'; // Default player names
+                
+                // Create a new game via API
+                $.ajax({
+                    url: `/api/games?size=${size}&capacity=${capacity}&players=${players}`,
+                    type: 'POST',
+                    success: function(response) {
+                        // Display the game ID
+                        $('#game-id-display').text(`Game created! Game ID: ${response.id}`).show();
+                    },
+                    error: function(xhr) {
+                        alert('Error creating game: ' + JSON.stringify(xhr.responseJSON));
+                    }
+                });
+            });
+            
+            // View Game button click handler
+            $('#view-game-btn').click(function() {
+                const gameId = $('#view-game-id').val().trim();
+                
+                if (!gameId) {
+                    alert('Please enter a Game ID');
+                    return;
+                }
+                
+                // Redirect to the game view page
+                window.location.href = `game.html?id=${gameId}`;
+            });
+            
+            // Play Game button click handler (no action needed as per requirements)
+            $('#play-game-btn').click(function() {
+                // No action needed as per requirements
+                const gameId = $('#play-game-id').val().trim();
+                const playerName = $('#player-name').val().trim();
+                
+                if (!gameId || !playerName) {
+                    alert('Please enter both Game ID and Player Name');
+                    return;
+                }
+                
+                // Just show a message that this feature is not implemented yet
+                alert('This feature is not implemented yet.');
+            });
+        });
+    </script>
 </body>
 </html>
