@@ -82,19 +82,19 @@ Created a Makefile with the following targets:
 
 The following API endpoints were implemented:
 
-- `POST /games`: Create a new game
-- `GET /games/:id`: Get game status
-- `POST /games/:id/players/:name/ready`: Set player as ready
-- `POST /games/:id/players/:name/strike`: Strike a coordinate
-- `POST /games/:id/players/:name/board`: Set player board
-- `GET /games/:id/players/:name/board`: Get player board
-- `GET /games/:id/players/:name/board/map`: Get ASCII representation of player board
-- `GET /games/:id/opponent/:name/board`: Get opponent blind board
-- `GET /games/:id/opponent/:name/board/map`: Get ASCII representation of opponent blind board
+- `POST /api/games`: Create a new game
+- `GET /api/games/:id`: Get game status
+- `POST /api/games/:id/players/:name/ready`: Set player as ready
+- `POST /api/games/:id/players/:name/strike`: Strike a coordinate
+- `POST /api/games/:id/players/:name/board`: Set player board
+- `GET /api/games/:id/players/:name/board`: Get player board
+- `GET /api/games/:id/players/:name/board/map`: Get ASCII representation of player board
+- `GET /api/games/:id/opponent/:name/board`: Get opponent blind board
+- `GET /api/games/:id/opponent/:name/board/map`: Get ASCII representation of opponent blind board
 
 ## Final Result
 
-The Energy War Game API is running at http://localhost:8080 and the Swagger documentation is available at http://localhost:8080/swagger/index.html.
+The Energy War Game API is running at http://localhost:8080 with API endpoints under the `/api` path. The frontend is served from the root path `/` and the Swagger documentation is available at http://localhost:8080/swagger/index.html.
 
 The implementation successfully meets all the requirements:
 - Backend in Go latest version

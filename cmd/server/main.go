@@ -22,7 +22,7 @@ var frontendFS embed.FS
 // @version 1.0
 // @description API for the Energy War Game
 // @host localhost:8080
-// @BasePath /
+// @BasePath /api
 func main() {
 	// Create a new Echo instance
 	e := echo.New()
@@ -38,21 +38,23 @@ func main() {
 	// Create handler
 	handler := handlers.NewHandler(gameManager)
 
-	// Routes
+	// API Group
+	api := e.Group("/api")
+
 	// Game routes
-	e.POST("/games", handler.CreateGame)
-	e.GET("/games/:id", handler.GetGame)
+	api.POST("/games", handler.CreateGame)
+	api.GET("/games/:id", handler.GetGame)
 
 	// Player routes
-	e.POST("/games/:id/players/:name/ready", handler.SetPlayerReady)
-	e.POST("/games/:id/players/:name/strike", handler.Strike)
-	e.POST("/games/:id/players/:name/board", handler.SetBoard)
-	e.GET("/games/:id/players/:name/board", handler.GetBoard)
-	e.GET("/games/:id/players/:name/board/map", handler.GetBoardMap)
+	api.POST("/games/:id/players/:name/ready", handler.SetPlayerReady)
+	api.POST("/games/:id/players/:name/strike", handler.Strike)
+	api.POST("/games/:id/players/:name/board", handler.SetBoard)
+	api.GET("/games/:id/players/:name/board", handler.GetBoard)
+	api.GET("/games/:id/players/:name/board/map", handler.GetBoardMap)
 
 	// Opponent routes
-	e.GET("/games/:id/opponent/:name/board", handler.GetOpponentBlindBoard)
-	e.GET("/games/:id/opponent/:name/board/map", handler.GetOpponentBoardMap)
+	api.GET("/games/:id/opponent/:name/board", handler.GetOpponentBlindBoard)
+	api.GET("/games/:id/opponent/:name/board/map", handler.GetOpponentBoardMap)
 
 	// Swagger documentation
 	e.GET("/swagger/*", echoSwagger.WrapHandler)

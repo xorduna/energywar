@@ -124,10 +124,10 @@
     <h2>API Examples</h2>
     
     <h3>Create a Game</h3>
-    <pre><code>POST /games?size=10&capacity=1000&players=alice,bob</code></pre>
+    <pre><code>POST /api/games?size=10&capacity=1000&players=alice,bob</code></pre>
     
     <h3>Set Up a Board</h3>
-    <pre><code>POST /games/:id/players/:name/board
+    <pre><code>POST /api/games/:id/players/:name/board
 {
   "plants": [
     {
@@ -150,10 +150,10 @@
 }</code></pre>
     
     <h3>Mark Player as Ready</h3>
-    <pre><code>POST /games/:id/players/:name/ready</code></pre>
+    <pre><code>POST /api/games/:id/players/:name/ready</code></pre>
     
     <h3>Strike a Coordinate</h3>
-    <pre><code>POST /games/:id/players/:name/strike?target=opponent&y=A&x=1</code></pre>
+    <pre><code>POST /api/games/:id/players/:name/strike?target=opponent&y=A&x=1</code></pre>
     
     <div class="api-link">
         <a href="/swagger/index.html" class="button">View API Documentation</a>
