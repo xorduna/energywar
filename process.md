@@ -59,6 +59,17 @@ Created a simple frontend in `frontend/index.html`:
 - Added API usage examples
 - Provided a link to the Swagger documentation
 
+Enhanced the frontend with interactive game features:
+- Added a "New Game" button that creates a new game and displays the game ID
+- Added a game viewing feature with an input field for game ID and a "View" button
+- Added a play game section with input fields for game ID and player name
+- Created a game.html page to display the game status and boards
+- Implemented board visualization with power plant icons
+- Added color coding for hits (red), misses (orange), and normal cells (green)
+- Added visual indicators for working (green border) and damaged (red border) power plants
+- Implemented automatic polling to update game status and boards every second
+- Added error handling for API requests and null checks for board properties
+
 ### 6. Server Implementation
 
 Created the server in `cmd/server/main.go`:
