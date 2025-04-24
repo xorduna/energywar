@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -14,6 +15,10 @@ import (
 
 	_ "github.com/xorduna/energywar/docs" // Import generated swagger docs
 )
+
+// useEmbedded determines whether to use embedded files or serve directly from disk
+// Set to false during development for faster iteration
+const useEmbedded = false
 
 //go:embed frontend
 var frontendFS embed.FS
@@ -60,11 +65,22 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Serve frontend files
-	frontendSubFS, err := fs.Sub(frontendFS, "frontend")
-	if err != nil {
-		log.Fatal(err)
+	if useEmbedded {
+		// Use embedded files (for production)
+		frontendSubFS, err := fs.Sub(frontendFS, "frontend")
+		if err != nil {
+			log.Fatal(err)
+		}
+		e.GET("/*", echo.WrapHandler(http.FileServer(http.FS(frontendSubFS))))
+	} else {
+		// Serve directly from disk (for development)
+		// Check if the frontend directory exists
+		if _, err := os.Stat("cmd/server/frontend"); err == nil {
+			e.Static("/", "cmd/server/frontend")
+		} else {
+			log.Fatal("Frontend directory not found. Make sure you're running from the project root.")
+		}
 	}
-	e.GET("/*", echo.WrapHandler(http.FileServer(http.FS(frontendSubFS))))
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8080"))

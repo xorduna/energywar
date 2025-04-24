@@ -83,10 +83,11 @@
             align-items: center;
             background-color: #e8f4fc;
             position: relative;
+            box-sizing: border-box;
         }
         .cell img {
-            width: 100%;
-            height: 100%;
+            width: 80%;
+            height: 80%;
             object-fit: contain;
         }
         .hit {
@@ -106,6 +107,16 @@
         }
         .plant-damaged {
             border-color: #e74c3c !important; /* Red border for damaged plants */
+        }
+        .error-message {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+            display: none;
         }
         .button {
             display: inline-block;
@@ -155,6 +166,10 @@
         <a href="index.html" class="button">Back to Home</a>
     </div>
     
+    <div class="error-message" id="error-message">
+        Game not found or an error occurred. Polling has been stopped.
+    </div>
+    
     <script>
         $(document).ready(function() {
             // Get game ID from URL parameter
@@ -169,6 +184,9 @@
             
             // Update game ID display
             $('#game-id').text(`Game ID: ${gameId}`);
+            
+            // Variable to track if polling should continue
+            let continuePolling = true;
             
             // Function to create a grid for a player's board
             function createGrid(containerId, size = 10) {
@@ -212,10 +230,7 @@
                 $(`#${playerId}-capacity`).text(`Capacity: ${board.capacity} / ${board.total_capacity}`);
                 
                 // Clear all cell classes and images
-                $(`#${playerId}-board .cell`).removeClass('hit miss normal').empty();
-                
-                // Reset all plant containers
-                $('.plant-container').removeClass('plant-container plant-working plant-damaged');
+                $(`#${playerId}-board .cell`).removeClass('hit miss normal plant-container plant-working plant-damaged').empty();
                 
                 // Create a map of coordinates to plant types
                 const plantMap = {};
@@ -237,48 +252,49 @@
                     });
                 }
                 
-                // Add plant images to cells
+                // First, add all plant images and containers
                 for (const [coord, plantType] of Object.entries(plantMap)) {
                     const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
-                    cell.html(`<img src="assets/img/${plantType}.png" alt="${plantType}">`);
-                    cell.addClass('normal');
+                    if (cell.length) {
+                        cell.html(`<img src="assets/img/${plantType}.png" alt="${plantType}">`);
+                        cell.addClass('plant-container normal');
+                    }
                 }
                 
-                // Mark hits
+                // Then mark hits and misses
                 if (board.hits) {
                     board.hits.forEach(coord => {
                         const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
-                        cell.addClass('hit').removeClass('normal');
+                        if (cell.length) {
+                            cell.removeClass('normal').addClass('hit');
+                        }
                     });
                 }
                 
-                // Mark misses
                 if (board.misses) {
                     board.misses.forEach(coord => {
                         const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
-                        cell.addClass('miss').removeClass('normal');
+                        if (cell.length) {
+                            cell.removeClass('normal').addClass('miss');
+                        }
                     });
                 }
                 
-                // Group cells by plant and add container with appropriate status
+                // Finally, add working/damaged status to plants
                 for (const [plantType, plantGroups] of Object.entries(plantCells)) {
                     plantGroups.forEach(plantCoords => {
                         // Check if any cell in this plant is hit
                         const isHit = board.hits && plantCoords.some(coord => board.hits.includes(coord));
                         
-                        // Create a container for this plant
-                        const firstCell = $(`#${playerId}-board .cell[data-coord="${plantCoords[0]}"]`);
-                        const lastCell = $(`#${playerId}-board .cell[data-coord="${plantCoords[plantCoords.length - 1]}"]`);
-                        
-                        // Add plant container class to all cells in this plant
+                        // Add status classes to all cells in this plant
                         plantCoords.forEach(coord => {
                             const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
-                            cell.addClass('plant-container');
-                            
-                            if (isHit) {
-                                cell.addClass('plant-damaged');
-                            } else {
-                                cell.addClass('plant-working');
+                            if (cell.length) {
+                                if (isHit) {
+                                    cell.addClass('plant-damaged');
+                                } else {
+                                    cell.addClass('plant-working');
+                                }
                             }
                         });
                     });
@@ -287,6 +303,8 @@
             
             // Function to fetch game data and update the UI
             function updateGameData() {
+                if (!continuePolling) return;
+                
                 $.ajax({
                     url: `/api/games/${gameId}`,
                     type: 'GET',
@@ -310,33 +328,163 @@
                     },
                     error: function(xhr) {
                         console.error('Error fetching game data:', xhr);
+                        // Show error message and stop polling
+                        $('#error-message').show();
+                        continuePolling = false;
                     }
                 });
             }
             
             // Function to fetch a player's board
             function fetchPlayerBoard(playerName, containerId) {
+                if (!continuePolling) return;
+                
+                // Extract player ID from container ID
+                const playerId = containerId.split('-')[0];
+                
+                // Flag to track if we got board data with plants
+                let gotBoardWithPlants = false;
+                
+                // First try to get the player's board with full plant information
                 $.ajax({
-                    url: `/api/games/${gameId}/opponent/${playerName}/board`,
+                    url: `/api/games/${gameId}/players/${playerName}/board`,
                     type: 'GET',
                     success: function(boardData) {
-                        // Extract player ID from container ID
-                        const playerId = containerId.split('-')[0];
-                        
                         // Update the board display
                         updateBoard(playerId, playerName, boardData);
+                        
+                        // If we have plants data, mark that we got it
+                        if (boardData.plants && boardData.plants.length > 0) {
+                            gotBoardWithPlants = true;
+                        } else {
+                            // If no plants in board data, try to get them from map
+                            fetchMapData(playerName, playerId);
+                        }
                     },
                     error: function(xhr) {
-                        console.error(`Error fetching board for ${playerName}:`, xhr);
+                        // If we can't get the player's board, try to get the opponent's board (which has less info)
+                        $.ajax({
+                            url: `/api/games/${gameId}/opponent/${playerName}/board`,
+                            type: 'GET',
+                            success: function(boardData) {
+                                // Update the board display
+                                updateBoard(playerId, playerName, boardData);
+                                
+                                // Since opponent board doesn't have plants, get them from map
+                                fetchMapData(playerName, playerId);
+                            },
+                            error: function(xhr) {
+                                console.error(`Error fetching board for ${playerName}:`, xhr);
+                                
+                                // Try map as last resort
+                                fetchMapData(playerName, playerId);
+                            }
+                        });
                     }
                 });
+            }
+            
+            // Function to fetch map data for a player
+            function fetchMapData(playerName, playerId) {
+                if (!continuePolling) return;
+                
+                $.ajax({
+                    url: `/api/games/${gameId}/players/${playerName}/board/map`,
+                    type: 'GET',
+                    success: function(mapData) {
+                        // Process the map data to extract plant information
+                        const plantMap = {};
+                        const rows = mapData.split('\n');
+                        
+                        // Skip the first row (column numbers)
+                        for (let i = 1; i < rows.length; i++) {
+                            const row = rows[i].trim();
+                            if (!row) continue;
+                            
+                            // Extract row letter (A, B, C, etc.)
+                            const rowLetter = row[0];
+                            
+                            // Process each cell in the row
+                            for (let j = 2; j < row.length; j += 2) {
+                                const cellContent = row[j];
+                                if (cellContent !== '.') {
+                                    // This is a plant cell
+                                    const colNumber = Math.floor((j - 2) / 2) + 1;
+                                    const coord = `${rowLetter}${colNumber}`;
+                                    plantMap[coord] = cellContent.toLowerCase();
+                                }
+                            }
+                        }
+                        
+                        // Update the board with plant information
+                        updateBoardWithPlants(playerId, plantMap);
+                    },
+                    error: function(xhr) {
+                        console.error(`Error fetching map for ${playerName}:`, xhr);
+                    }
+                });
+            }
+            
+            // Function to update the board with plant information from the map
+            function updateBoardWithPlants(playerId, plantMap) {
+                for (const [coord, plantType] of Object.entries(plantMap)) {
+                    const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
+                    if (cell.length) {
+                        // Map plant type to image
+                        let imgSrc;
+                        // Convert to lowercase for case-insensitive comparison
+                        const plantTypeLower = plantType.toLowerCase();
+                        
+                        switch (plantTypeLower) {
+                            case 'n':
+                                imgSrc = 'nuclear';
+                                break;
+                            case 's':
+                                imgSrc = 'solar';
+                                break;
+                            case 'w':
+                                imgSrc = 'wind';
+                                break;
+                            case 'g':
+                                imgSrc = 'gas';
+                                break;
+                            case 'h': // Hit
+                            case 'm': // Miss
+                            case '?': // Unknown
+                            case '-': // Land
+                                // Skip non-plant cells
+                                continue;
+                            default:
+                                console.warn(`Unknown plant type: ${plantType} at ${coord}`);
+                                continue; // Skip unknown plant types
+                        }
+                        
+                        // Add plant image and classes
+                        cell.html(`<img src="assets/img/${imgSrc}.png" alt="${plantTypeLower}">`);
+                        cell.addClass('plant-container normal');
+                        
+                        // By default, plants are working
+                        cell.addClass('plant-working');
+                        
+                        // If the cell is already marked as hit, update the status
+                        if (cell.hasClass('hit')) {
+                            cell.removeClass('plant-working').addClass('plant-damaged');
+                        }
+                    }
+                }
             }
             
             // Initial update
             updateGameData();
             
             // Set up polling every second
-            setInterval(updateGameData, 1000);
+            const pollingInterval = setInterval(function() {
+                if (!continuePolling) {
+                    clearInterval(pollingInterval);
+                    return;
+                }
+                updateGameData();
+            }, 1000);
         });
     </script>
 </body>
