@@ -892,10 +892,7 @@
                 errorElement.show();
                 $('#success-message').hide();
                 
-                // Hide after 5 seconds
-                setTimeout(function() {
-                    errorElement.fadeOut();
-                }, 5000);
+                // Don't auto-hide messages
             }
             
             // Function to show success message
@@ -905,10 +902,7 @@
                 successElement.show();
                 $('#error-message').hide();
                 
-                // Hide after 5 seconds
-                setTimeout(function() {
-                    successElement.fadeOut();
-                }, 5000);
+                // Don't auto-hide messages
             }
             
             // Plant selection event
