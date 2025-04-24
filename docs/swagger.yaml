@@ -1,0 +1,395 @@
+basePath: /
+definitions:
+  models.Board:
+    properties:
+      capacity:
+        type: integer
+      hits:
+        items:
+          type: string
+        type: array
+      misses:
+        items:
+          type: string
+        type: array
+      plants:
+        items:
+          $ref: '#/definitions/models.Plant'
+        type: array
+      total_capacity:
+        type: integer
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  models.Game:
+    properties:
+      id:
+        type: string
+      players:
+        additionalProperties:
+          $ref: '#/definitions/models.PlayerInfo'
+        type: object
+      status:
+        $ref: '#/definitions/models.GameStatus'
+      turn:
+        type: string
+      winner:
+        type: string
+    type: object
+  models.GameStatus:
+    enum:
+    - PENDING
+    - IN_PROGRESS
+    - END
+    type: string
+    x-enum-varnames:
+    - GameStatusPending
+    - GameStatusInProgress
+    - GameStatusEnd
+  models.Plant:
+    properties:
+      coordinates:
+        items:
+          type: string
+        type: array
+      type:
+        $ref: '#/definitions/models.PlantType'
+    type: object
+  models.PlantType:
+    enum:
+    - NUCLEAR
+    - GAS
+    - WIND
+    - SOLAR
+    type: string
+    x-enum-varnames:
+    - PlantTypeNuclear
+    - PlantTypeGas
+    - PlantTypeWind
+    - PlantTypeSolar
+  models.PlayerInfo:
+    properties:
+      board:
+        $ref: '#/definitions/models.Board'
+      capacity:
+        type: integer
+      ready:
+        type: boolean
+      total_capacity:
+        type: integer
+    type: object
+  models.ReadyResponse:
+    properties:
+      result:
+        type: string
+    type: object
+  models.StrikeResponse:
+    properties:
+      result:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API for the Energy War Game
+  title: Energy War Game API
+  version: "1.0"
+paths:
+  /games:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new game with the specified parameters
+      parameters:
+      - default: 10
+        description: Board size (5-20)
+        in: query
+        name: size
+        type: integer
+      - default: 1000
+        description: Required capacity
+        in: query
+        name: capacity
+        type: integer
+      - description: Comma-separated list of player names
+        in: query
+        name: players
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Game'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create a new game
+      tags:
+      - games
+  /games/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Gets the current status of a game
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Game'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get game status
+      tags:
+      - games
+  /games/{id}/opponent/{name}/board:
+    get:
+      consumes:
+      - application/json
+      description: Gets an opponent's blind board (only hits and misses)
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Opponent name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Board'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get opponent's blind board
+      tags:
+      - players
+  /games/{id}/opponent/{name}/board/map:
+    get:
+      consumes:
+      - application/json
+      description: Gets an ASCII representation of an opponent's blind board
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Opponent name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get opponent board map
+      tags:
+      - players
+  /games/{id}/players/{name}/board:
+    get:
+      consumes:
+      - application/json
+      description: Gets a player's board configuration
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Player name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Board'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get player board
+      tags:
+      - players
+    post:
+      consumes:
+      - application/json
+      description: Sets a player's board configuration
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Player name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Board configuration
+        in: body
+        name: board
+        required: true
+        schema:
+          $ref: '#/definitions/models.Board'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Board'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Set player board
+      tags:
+      - players
+  /games/{id}/players/{name}/board/map:
+    get:
+      consumes:
+      - application/json
+      description: Gets an ASCII representation of a player's board
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Player name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get player board map
+      tags:
+      - players
+  /games/{id}/players/{name}/ready:
+    post:
+      consumes:
+      - application/json
+      description: Sets a player as ready to start the game
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Player name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ReadyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Set player ready
+      tags:
+      - players
+  /games/{id}/players/{name}/strike:
+    post:
+      consumes:
+      - application/json
+      description: Player strikes a coordinate on the opponent's board
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Player name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Target player name
+        in: query
+        name: target
+        required: true
+        type: string
+      - description: Y coordinate (A-Z)
+        in: query
+        name: "y"
+        required: true
+        type: string
+      - description: X coordinate (1-size)
+        in: query
+        name: x
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.StrikeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Strike a coordinate
+      tags:
+      - players
+swagger: "2.0"
