@@ -565,10 +565,10 @@
                         $('.board:eq(1) h3').text('Power Plant Selection');
                         $('.board:eq(1) #opponent-board').hide();
                         $('.board:eq(1) #opponent-capacity').hide();
-                        $('.plant-selector').appendTo('.board:eq(1)');
-                        $('#orientation-selector').appendTo('.board:eq(1)');
-                        $('.instructions').appendTo('.board:eq(1)');
-                        $('.actions').appendTo('.board:eq(1)');
+                        $('.plant-selector').appendTo('.board:eq(1)').show();
+                        $('#orientation-selector').appendTo('.board:eq(1)').show();
+                        $('.instructions').appendTo('.board:eq(1)').show();
+                        $('.actions').appendTo('.board:eq(1)').show();
                     } else {
                         $('#setup-controls').hide();
                         $('#strike-controls').hide();
@@ -580,6 +580,12 @@
                     $('.board:eq(1) h3').text('Opponent\'s Board');
                     $('.board:eq(1) #opponent-board').show();
                     $('.board:eq(1) #opponent-capacity').show();
+                    
+                    // Hide all setup-related elements
+                    $('.plant-selector').hide();
+                    $('#orientation-selector').hide();
+                    $('.instructions').hide();
+                    $('.actions').hide();
                     
                     // Show strike controls only if it's player's turn
                     if (turn === playerName) {
@@ -593,6 +599,12 @@
                     // Game is over
                     $('#setup-controls').hide();
                     $('#strike-controls').hide();
+                    
+                    // Hide all setup-related elements
+                    $('.plant-selector').hide();
+                    $('#orientation-selector').hide();
+                    $('.instructions').hide();
+                    $('.actions').hide();
                     
                     if (gameData.winner === playerName) {
                         showSuccess('Congratulations! You won the game!');
@@ -785,7 +797,7 @@
             }
             
             // Function to save the board to the server
-            function saveBoard() {
+            function saveBoard(callback) {
                 // Ensure playerBoard.plants is initialized
                 if (!playerBoard.plants) {
                     playerBoard.plants = [];
@@ -802,6 +814,11 @@
                         console.log('Board saved successfully:', data);
                         playerBoard = data;
                         updatePlayerBoard();
+                        
+                        // Call the callback function if provided
+                        if (callback && typeof callback === 'function') {
+                            callback();
+                        }
                     },
                     error: function(xhr) {
                         console.error('Error saving board:', xhr);
@@ -954,8 +971,10 @@
                 }
                 
                 // First save the board, then mark as ready
-                saveBoard();
-                setPlayerReady();
+                // Use the callback to ensure setPlayerReady is called only after saveBoard completes
+                saveBoard(function() {
+                    setPlayerReady();
+                });
             });
             
             // Hide orientation selector initially (only show for Wind plants)
