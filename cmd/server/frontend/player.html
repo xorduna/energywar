@@ -587,13 +587,14 @@
                     $('.instructions').hide();
                     $('.actions').hide();
                     
-                    // Show strike controls only if it's player's turn
+                    // Always show strike controls during gameplay
+                    $('#strike-controls').show();
+                    
+                    // Update status message based on turn
                     if (turn === playerName) {
-                        $('#strike-controls').show();
                         showSuccess('It\'s your turn! Click on the opponent\'s board to strike.');
                     } else {
-                        $('#strike-controls').hide();
-                        showSuccess('Waiting for opponent\'s move...');
+                        showSuccess('Waiting for opponent\'s move...', true); // true indicates it's a waiting message
                     }
                 } else if (status === 'END') {
                     // Game is over
@@ -896,9 +897,17 @@
             }
             
             // Function to show success message
-            function showSuccess(message) {
+            function showSuccess(message, isWaiting = false) {
                 const successElement = $('#success-message');
                 successElement.text(message);
+                
+                // Change background color for waiting messages
+                if (isWaiting) {
+                    successElement.css('background-color', '#95a5a6'); // Gray for waiting messages
+                } else {
+                    successElement.css('background-color', '#2ecc71'); // Green for normal success messages
+                }
+                
                 successElement.show();
                 $('#error-message').hide();
                 
