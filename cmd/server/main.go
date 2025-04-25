@@ -26,7 +26,6 @@ var frontendFS embed.FS
 // @title Energy War Game API
 // @version 1.0
 // @description API for the Energy War Game
-// @host localhost:8080
 // @BasePath /api
 func main() {
 	// Create a new Echo instance
