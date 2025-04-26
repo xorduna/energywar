@@ -5,218 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy War Game - Play</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-            text-align: center;
-        }
-        .game-info {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .game-info p {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-        .boards-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-        .board {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            min-width: 300px;
-            flex: 1;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(10, 30px);
-            grid-template-rows: repeat(10, 30px);
-            gap: 2px;
-            margin-top: 15px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .grid-header {
-            display: grid;
-            grid-template-columns: 30px repeat(10, 30px);
-            gap: 2px;
-            margin-bottom: 5px;
-        }
-        .grid-header-item {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-        }
-        .grid-row {
-            display: grid;
-            grid-template-columns: 30px repeat(10, 30px);
-            gap: 2px;
-            padding-bottom: 2px;
-        }
-        .grid-row-header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-        }
-        .cell {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #e8f4fc;
-            position: relative;
-            box-sizing: border-box;
-            cursor: pointer;
-        }
-        .cell img {
-            width: 80%;
-            height: 80%;
-            object-fit: contain;
-        }
-        .hit {
-            background-color: #ff6b6b !important; /* Red for hit */
-        }
-        .miss {
-            background-color: #ffa94d !important; /* Orange for miss */
-        }
-        .normal {
-            background-color: #8ce99a !important; /* Green for normal */
-        }
-        .plant-container {
-            border: 2px solid transparent;
-        }
-        .plant-working {
-            border-color: #2ecc71 !important; /* Green border for working plants */
-        }
-        .plant-damaged {
-            border-color: #e74c3c !important; /* Red border for damaged plants */
-        }
-        .error-message {
-            background-color: #ff6b6b;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 20px auto;
-            max-width: 600px;
-            text-align: center;
-            display: none;
-        }
-        .success-message {
-            background-color: #2ecc71;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 20px auto;
-            max-width: 600px;
-            text-align: center;
-            display: none;
-        }
-        .button {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-top: 20px;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #2980b9;
-        }
-        .button-disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        .button-disabled:hover {
-            background-color: #95a5a6;
-        }
-        .home-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .setup-controls {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 600px;
-        }
-        .plant-selector {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .plant-option {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 5px;
-            border: 2px solid transparent;
-        }
-        .plant-option.selected {
-            border-color: #3498db;
-            background-color: #e8f4fc;
-        }
-        .plant-option img {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-            margin-bottom: 5px;
-        }
-        .orientation-selector {
-            margin: 10px 0;
-        }
-        .capacity-display {
-            margin: 10px 0;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        .instructions {
-            margin: 10px 0;
-            font-style: italic;
-            color: #7f8c8d;
-        }
-        .actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .strike-controls {
-            text-align: center;
-            margin: 15px 0;
-            display: none;
-        }
-    </style>
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="assets/css/player.css">
 </head>
 <body>
     <h1>Energy War Game - Play</h1>
@@ -233,57 +23,7 @@
         </div>
     </div>
     
-    <div class="setup-controls" id="setup-controls">
-        <h3>Setup Your Board</h3>
-        <div class="capacity-display">
-            <span id="current-capacity">Current Capacity: 0</span> / 
-            <span id="required-capacity">Required: 0</span>
-        </div>
-        <div class="plant-selector">
-            <div class="plant-option" data-type="NUCLEAR">
-                <img src="assets/img/nuclear.png" alt="Nuclear">
-                <span>Nuclear</span>
-                <span>1000 MW</span>
-                <span>3x3</span>
-            </div>
-            <div class="plant-option" data-type="GAS">
-                <img src="assets/img/gas.png" alt="Gas">
-                <span>Gas</span>
-                <span>300 MW</span>
-                <span>2x2</span>
-            </div>
-            <div class="plant-option" data-type="WIND">
-                <img src="assets/img/wind.png" alt="Wind">
-                <span>Wind</span>
-                <span>100 MW</span>
-                <span>2x1</span>
-            </div>
-            <div class="plant-option" data-type="SOLAR">
-                <img src="assets/img/solar.png" alt="Solar">
-                <span>Solar</span>
-                <span>25 MW</span>
-                <span>1x1</span>
-            </div>
-        </div>
-        <div class="orientation-selector" id="orientation-selector">
-            <label>
-                <input type="radio" name="orientation" value="horizontal" checked> Horizontal
-            </label>
-            <label>
-                <input type="radio" name="orientation" value="vertical"> Vertical
-            </label>
-        </div>
-        <div class="instructions">
-            <p>1. Select a power plant type</p>
-            <p>2. Choose orientation (for Wind plants)</p>
-            <p>3. Click on your board to place the plant</p>
-            <p>4. Click "Ready" when your board is complete</p>
-        </div>
-        <div class="actions">
-            <button id="reset-board-btn" class="button">Reset Board</button>
-            <button id="ready-btn" class="button button-disabled">Ready</button>
-        </div>
-    </div>
+
     
     <div class="strike-controls" id="strike-controls">
         <p>Click on your opponent's board to strike when it's your turn</p>
@@ -296,7 +36,60 @@
             <div id="player-board"></div>
         </div>
         
-        <div id="opponents-container">
+        <div class="setup-controls" id="setup-controls">
+            <h3>Setup Your Board</h3>
+            <div class="capacity-display">
+                <span id="current-capacity">Current Capacity: 0</span> / 
+                <span id="required-capacity">Required: 0</span>
+            </div>
+            <div class="plant-selector">
+                <div class="plant-option" data-type="NUCLEAR">
+                    <img src="assets/img/nuclear.png" alt="Nuclear">
+                    <span>Nuclear</span>
+                    <span>1000 MW</span>
+                    <span>3x3</span>
+                </div>
+                <div class="plant-option" data-type="GAS">
+                    <img src="assets/img/gas.png" alt="Gas">
+                    <span>Gas</span>
+                    <span>300 MW</span>
+                    <span>2x2</span>
+                </div>
+                <div class="plant-option" data-type="WIND">
+                    <img src="assets/img/wind.png" alt="Wind">
+                    <span>Wind</span>
+                    <span>100 MW</span>
+                    <span>2x1</span>
+                </div>
+                <div class="plant-option" data-type="SOLAR">
+                    <img src="assets/img/solar.png" alt="Solar">
+                    <span>Solar</span>
+                    <span>25 MW</span>
+                    <span>1x1</span>
+                </div>
+            </div>
+            <div class="orientation-selector" id="orientation-selector">
+                <label>
+                    <input type="radio" name="orientation" value="horizontal" checked> Horizontal
+                </label>
+                <label>
+                    <input type="radio" name="orientation" value="vertical"> Vertical
+                </label>
+            </div>
+            <div class="instructions">
+                <p>1. Select a power plant type</p>
+                <p>2. Choose orientation (for Wind plants)</p>
+                <p>3. Click on your board to place the plant</p>
+                <p>4. Click "Ready" when your board is complete</p>
+            </div>
+            <div class="actions">
+                <button id="reset-board-btn" class="button">Reset Board</button>
+                <button id="ready-btn" class="button button-disabled">Ready</button>
+            </div>
+        </div>
+
+
+        <div id="opponents-container" style="display: none;">
             <!-- Opponent boards will be dynamically added here -->
         </div>
     </div>

@@ -1,0 +1,245 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+    text-align: center;
+}
+
+.game-info {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.game-info p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+.boards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.board {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    min-width: 300px;
+    flex: 1;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 2px;
+    margin-top: 15px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.grid-header {
+    display: grid;
+    grid-template-columns: 30px repeat(10, 30px);
+    gap: 2px;
+    margin-bottom: 5px;
+}
+
+.grid-header-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.grid-row {
+    display: grid;
+    grid-template-columns: 30px repeat(10, 30px);
+    gap: 2px;
+    padding-bottom: 2px;
+}
+
+.grid-row-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.cell {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #e8f4fc;
+    position: relative;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.cell img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+.hit {
+    background-color: #ff6b6b !important; /* Red for hit */
+}
+
+.miss {
+    background-color: #ffa94d !important; /* Orange for miss */
+}
+
+.normal {
+    background-color: #8ce99a !important; /* Green for normal */
+}
+
+.plant-container {
+    border: 2px solid transparent;
+}
+
+.plant-working {
+    border-color: #2ecc71 !important; /* Green border for working plants */
+}
+
+.plant-damaged {
+    border-color: #e74c3c !important; /* Red border for damaged plants */
+}
+
+.error-message {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: center;
+    display: none;
+}
+
+.success-message {
+    background-color: #2ecc71;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: center;
+    display: none;
+}
+
+.button {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #2980b9;
+}
+
+.button-disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.button-disabled:hover {
+    background-color: #95a5a6;
+}
+
+.home-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.setup-controls {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: center;
+    max-width: 600px;
+}
+
+.plant-selector {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.plant-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid transparent;
+}
+
+.plant-option.selected {
+    border-color: #3498db;
+    background-color: #e8f4fc;
+}
+
+.plant-option img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    margin-bottom: 5px;
+}
+
+.orientation-selector {
+    margin: 10px 0;
+}
+
+.capacity-display {
+    margin: 10px 0;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.instructions {
+    margin: 10px 0;
+    font-style: italic;
+    color: #7f8c8d;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.strike-controls {
+    text-align: center;
+    margin: 15px 0;
+    display: none;
+}
