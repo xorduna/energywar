@@ -52,7 +52,26 @@ energywar/
 
 ### Frontend
 
-The frontend is built using HTML, CSS, and JavaScript with jQuery for AJAX requests. It consists of three main pages:
+The frontend is built using HTML, CSS, and JavaScript with jQuery for AJAX requests. It follows a modular structure with separation of concerns:
+
+```
+frontend/
+├── index.html              # Main landing page
+├── game.html               # Game view page
+├── player.html             # Player interaction page
+└── assets/
+    ├── css/                # Stylesheets
+    │   └── player.css      # Styles for player page
+    ├── js/                 # JavaScript files
+    │   └── player.js       # Logic for player page
+    └── img/                # Image resources
+        ├── gas.png         # Gas plant icon
+        ├── nuclear.png     # Nuclear plant icon
+        ├── solar.png       # Solar plant icon
+        └── wind.png        # Wind plant icon
+```
+
+It consists of three main pages:
 
 1. **Index Page (`index.html`)**
    - Game description and rules
@@ -68,6 +87,9 @@ The frontend is built using HTML, CSS, and JavaScript with jQuery for AJAX reque
    - Board setup interface
    - Strike interface during gameplay
    - Real-time game status updates
+   - Modular design with:
+     - Separated CSS in player.css
+     - Separated JavaScript in player.js
 
 ### API Endpoints
 

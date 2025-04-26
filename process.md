@@ -70,6 +70,21 @@ Enhanced the frontend with interactive game features:
 - Implemented automatic polling to update game status and boards every second
 - Added error handling for API requests and null checks for board properties
 
+Refactored the frontend for better maintainability:
+- Organized frontend assets into a structured directory:
+  ```
+  frontend/assets/
+  ├── css/        # Stylesheets
+  ├── js/         # JavaScript files
+  └── img/        # Image resources
+  ```
+- Separated concerns in the player.html page:
+  - Moved JavaScript code to external file (player.js)
+  - Moved CSS styles to external file (player.css)
+  - Kept HTML structure clean and focused
+- Improved code organization and maintainability
+- Made the codebase more modular and easier to extend
+
 ### 6. Server Implementation
 
 Created the server in `cmd/server/main.go`:
