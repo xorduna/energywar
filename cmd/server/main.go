@@ -18,7 +18,7 @@ import (
 
 // useEmbedded determines whether to use embedded files or serve directly from disk
 // Set to true for production deployment
-const useEmbedded = false
+const useEmbedded = true
 
 //go:embed frontend
 var frontendFS embed.FS
