@@ -38,10 +38,12 @@ $(document).ready(function() {
     };
     let continuePolling = true;
     let isPlayerReady = false;
+    let isUpdating = false; // Flag to prevent multiple simultaneous updates
     
-    // Create initial grids
+    // Create initial grid for player board
     createGrid('player-board', boardSize);
-    createGrid('opponent-board', boardSize);
+    
+    // We don't need to create opponent-board grid here as it will be created dynamically
     
     // Function to create a grid
     function createGrid(containerId, size) {
@@ -158,34 +160,6 @@ $(document).ready(function() {
         }
     }
     
-    // Function to update the opponent's board display
-    function updateOpponentBoard() {
-        // Clear all cell classes and images
-        $('#opponent-board .cell').removeClass('hit miss normal').empty();
-        
-        // Update capacity display
-        $('#opponent-capacity').text(`Capacity: ${opponentBoard.capacity} / ${opponentBoard.total_capacity}`);
-        
-        // Mark hits and misses
-        if (opponentBoard.hits) {
-            opponentBoard.hits.forEach(coord => {
-                const cell = $(`#opponent-board .cell[data-coord="${coord}"]`);
-                if (cell.length) {
-                    cell.addClass('hit');
-                }
-            });
-        }
-        
-        if (opponentBoard.misses) {
-            opponentBoard.misses.forEach(coord => {
-                const cell = $(`#opponent-board .cell[data-coord="${coord}"]`);
-                if (cell.length) {
-                    cell.addClass('miss');
-                }
-            });
-        }
-    }
-    
     // Function to create a board container for an opponent
     function createOpponentBoardContainer(opponentName, index) {
         const boardId = `opponent${index}-board`;
@@ -202,7 +176,11 @@ $(document).ready(function() {
     
     // Function to fetch game data and update the UI
     function updateGameData() {
-        if (!continuePolling) return;
+        if (!continuePolling || isUpdating) return;
+        
+        // Set the updating flag to prevent multiple simultaneous updates
+        isUpdating = true;
+        console.log("Starting game data update");
         
         $.ajax({
             url: `/api/games/${gameId}`,
@@ -260,7 +238,7 @@ $(document).ready(function() {
                         opponentsContainer.append(boardContainer);
                         
                         // Create the grid for this board
-                        createGrid(boardId);
+                        createGrid(boardId, boardSize);
                         
                         // Fetch board data for this opponent
                         fetchOpponentBoard(opponent, boardId);
@@ -274,6 +252,10 @@ $(document).ready(function() {
                         </div>
                     `);
                 }
+                
+                // Reset the updating flag
+                isUpdating = false;
+                console.log("Game data update complete");
             },
             error: function(xhr) {
                 console.error('Error fetching game data:', xhr);
@@ -292,6 +274,10 @@ $(document).ready(function() {
                 } else {
                     showError('Error fetching game data. Please try again.');
                 }
+                
+                // Reset the updating flag even in case of error
+                isUpdating = false;
+                console.log("Game data update failed, but reset updating flag");
             }
         });
     }
@@ -342,12 +328,11 @@ $(document).ready(function() {
             $('#opponents-container').show();
             
             // Make sure opponent boards are visible
+            // Note: We don't need to fetch opponent boards here as they're already fetched in updateGameData
             const opponents = Object.keys(gameData.players).filter(name => name !== playerName);
             if (opponents.length > 0) {
-                // Fetch boards for all opponents
-                opponents.forEach((opponent, index) => {
-                    fetchOpponentBoard(opponent, `opponent${index+1}-board`);
-                });
+                // Just make sure the container is visible
+                $('#opponents-container').show();
             }
             
             // Update status message based on turn
@@ -436,6 +421,9 @@ $(document).ready(function() {
     
     // Function to update an opponent's board display
     function updateOpponentBoardDisplay(boardId, opponentName, board) {
+        console.log(`Updating opponent board display for ${opponentName}, boardId: ${boardId}`);
+        console.log('Board data:', board);
+        
         // Extract player ID from board ID
         const playerId = boardId.split('-')[0];
         
@@ -445,30 +433,44 @@ $(document).ready(function() {
         // Check if the grid exists, if not create it
         if ($(`#${boardId} .grid-header`).length === 0) {
             console.log(`Creating grid for ${boardId}`);
-            createGrid(boardId);
+            createGrid(boardId, boardSize);
+        }
+        
+        // Check if the container exists
+        if ($(`#${boardId}`).length === 0) {
+            console.error(`Container #${boardId} does not exist!`);
+            return;
         }
         
         // Clear all cell classes
         $(`#${boardId} .cell`).removeClass('hit miss').empty();
         
         // Mark hits and misses
-        if (board.hits) {
+        if (board.hits && board.hits.length > 0) {
+            console.log(`Marking ${board.hits.length} hits for ${opponentName}`);
             board.hits.forEach(coord => {
                 const cell = $(`#${boardId} .cell[data-coord="${coord}"]`);
                 if (cell.length) {
                     cell.addClass('hit');
+                } else {
+                    console.warn(`Cell with coord ${coord} not found in ${boardId}`);
                 }
             });
         }
         
-        if (board.misses) {
+        if (board.misses && board.misses.length > 0) {
+            console.log(`Marking ${board.misses.length} misses for ${opponentName}`);
             board.misses.forEach(coord => {
                 const cell = $(`#${boardId} .cell[data-coord="${coord}"]`);
                 if (cell.length) {
                     cell.addClass('miss');
+                } else {
+                    console.warn(`Cell with coord ${coord} not found in ${boardId}`);
                 }
             });
         }
+        
+        console.log(`Finished updating opponent board for ${opponentName}`);
     }
     
     // Function to update the ready button state
