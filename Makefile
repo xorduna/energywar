@@ -19,12 +19,12 @@ deps:
 
 # Generate Swagger documentation
 .PHONY: swagger
-swagger:
+docs:
 	$(SWAG) init -g $(MAIN_FILE)
 
 # Build the binary
 .PHONY: build
-build: swagger
+build:
 	$(GO) build -o $(BINARY_NAME) $(MAIN_FILE)
 
 # Run the application
@@ -49,7 +49,7 @@ help:
 	@echo "Available targets:"
 	@echo "  all      - Build the application (default)"
 	@echo "  deps     - Install dependencies"
-	@echo "  swagger  - Generate Swagger documentation"
+	@echo "  docs  - Generate Swagger documentation"
 	@echo "  build    - Build the binary"
 	@echo "  run      - Run the application"
 	@echo "  clean    - Remove build artifacts"
