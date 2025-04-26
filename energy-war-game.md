@@ -1,7 +1,9 @@
 
 **Description:**
 
-This document describes a "battleship" like game but with power plants. Each user has to setup its power plants (nuclear, gas, wind or solar) to meet the required capacity. Each other players strike for turns to reduce its opponent capacity. If a plant is hit, all the capacity is removed.
+This document describes a "battleship" like game but with power plants. Each user has to setup its power plants (nuclear, gas, wind or solar) to meet the required capacity. Players take turns striking at each other's power plants to reduce their opponent's capacity. If a plant is hit, all the capacity is removed.
+
+The game supports multiple players, with each player having their own board and taking turns in alphabetical order.
 
 Board 
 
@@ -67,10 +69,10 @@ When a game starts, each player should post their initial board. They can update
 
 Once both player have declared themselves ready, the game starts automatically until one of the two player wins.
 
-**POST /games?size=10&capacity=1000&players=alice,bob**
+**POST /games?size=10&capacity=1000**
 
 - Starts a game
-- Initial version will only support 2 players
+- Supports multiple players
 - Initial status is pending
 - Size should be between 5 and 20
 - There is no limit for capacity but should be > 0

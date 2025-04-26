@@ -51,6 +51,8 @@
             grid-template-rows: repeat(10, 30px);
             gap: 2px;
             margin-top: 15px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .grid-header {
             display: grid;
@@ -152,18 +154,8 @@
         </div>
     </div>
     
-    <div class="boards-container">
-        <div class="board">
-            <h3 id="player1-name">Player 1</h3>
-            <p id="player1-capacity">Capacity: 0 / 0</p>
-            <div id="player1-board"></div>
-        </div>
-        
-        <div class="board">
-            <h3 id="player2-name">Player 2</h3>
-            <p id="player2-capacity">Capacity: 0 / 0</p>
-            <div id="player2-board"></div>
-        </div>
+    <div class="boards-container" id="boards-container">
+        <!-- Player boards will be dynamically added here -->
     </div>
     
     <div class="home-link">
@@ -305,6 +297,20 @@
                 }
             }
             
+            // Function to create a board container for a player
+            function createBoardContainer(playerName, index) {
+                const boardId = `player${index}-board`;
+                const boardContainer = $(`
+                    <div class="board">
+                        <h3 id="player${index}-name">${playerName}</h3>
+                        <p id="player${index}-capacity">Capacity: 0 / 0</p>
+                        <div id="${boardId}"></div>
+                    </div>
+                `);
+                
+                return { boardContainer, boardId };
+            }
+            
             // Function to fetch game data and update the UI
             function updateGameData() {
                 if (!continuePolling) return;
@@ -333,23 +339,21 @@
                         
                         // Update board displays
                         if (playerNames.length > 0) {
-                            // Show boards for up to 2 players
-                            const displayCount = Math.min(playerNames.length, 2);
+                            // Clear the boards container
+                            const boardsContainer = $('#boards-container');
+                            boardsContainer.empty();
                             
-                            for (let i = 0; i < displayCount; i++) {
-                                const playerName = playerNames[i];
-                                const boardId = `player${i+1}-board`;
+                            // Create a board for each player
+                            playerNames.forEach((playerName, index) => {
+                                const { boardContainer, boardId } = createBoardContainer(playerName, index + 1);
+                                boardsContainer.append(boardContainer);
                                 
-                                // Fetch board for this player
+                                // Create the grid for this board
+                                createGrid(boardId);
+                                
+                                // Fetch board data for this player
                                 fetchPlayerBoard(playerName, boardId);
-                            }
-                            
-                            // Hide any unused board containers
-                            if (playerNames.length < 2) {
-                                $('#player2-name').text('Waiting for player...');
-                                $('#player2-capacity').text('');
-                                $('#player2-board').empty();
-                            }
+                            });
                         }
                     },
                     error: function(xhr) {

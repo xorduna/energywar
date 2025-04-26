@@ -119,3 +119,25 @@ The game mechanics are fully implemented according to the specifications, includ
 - Turn-based gameplay
 - Strike mechanics
 - Win condition checking
+- Multiplayer support
+
+## Multiplayer Support
+
+The game now supports multiple players with the following features:
+
+1. **Player Management**
+   - Players can join a game using a unique name
+   - Each player has their own board and capacity
+
+2. **Turn-Based Gameplay**
+   - Players take turns in alphabetical order
+   - Only the player whose turn it is can strike
+
+3. **Opponent Boards**
+   - Players can see blind versions of all opponent boards
+   - Hits and misses are visible, but plant locations are hidden
+
+4. **Frontend Enhancements**
+   - The game view page shows boards for all players
+   - The player page shows all opponent boards
+   - Players can strike any opponent's board when it's their turn

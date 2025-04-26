@@ -18,7 +18,7 @@ deps:
 	$(GO) get -u github.com/swaggo/echo-swagger
 
 # Generate Swagger documentation
-.PHONY: swagger
+.PHONY: docs
 docs:
 	$(SWAG) init -g $(MAIN_FILE)
 

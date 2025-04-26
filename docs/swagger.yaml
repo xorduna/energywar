@@ -1,5 +1,10 @@
 basePath: /api
 definitions:
+  handlers.JoinGameResponse:
+    properties:
+      token:
+        type: string
+    type: object
   models.Board:
     properties:
       capacity:
@@ -80,6 +85,8 @@ definitions:
         type: integer
       ready:
         type: boolean
+      token:
+        type: string
       total_capacity:
         type: integer
     type: object
@@ -95,7 +102,6 @@ definitions:
       status:
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: API for the Energy War Game
@@ -118,11 +124,6 @@ paths:
         in: query
         name: capacity
         type: integer
-      - description: Comma-separated list of player names
-        in: query
-        name: players
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -160,6 +161,36 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Get game status
+      tags:
+      - games
+  /games/{id}/join:
+    post:
+      consumes:
+      - application/json
+      description: Allows a player to join an existing game
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Player name
+        in: query
+        name: player
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.JoinGameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Join a game
       tags:
       - games
   /games/{id}/opponent/{name}/board:

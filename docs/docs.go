@@ -42,13 +42,6 @@ const docTemplate = `{
                         "description": "Required capacity",
                         "name": "capacity",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated list of player names",
-                        "name": "players",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -98,6 +91,51 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{id}/join": {
+            "post": {
+                "description": "Allows a player to join an existing game",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Join a game",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Game ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Player name",
+                        "name": "player",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.JoinGameResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorResponse"
                         }
@@ -450,6 +488,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.JoinGameResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Board": {
             "type": "object",
             "properties": {
@@ -567,6 +613,9 @@ const docTemplate = `{
                 "ready": {
                     "type": "boolean"
                 },
+                "token": {
+                    "type": "string"
+                },
                 "total_capacity": {
                     "type": "integer"
                 }
@@ -597,7 +646,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Energy War Game API",
