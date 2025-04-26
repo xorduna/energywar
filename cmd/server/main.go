@@ -48,6 +48,7 @@ func main() {
 	// Game routes
 	api.POST("/games", handler.CreateGame)
 	api.GET("/games/:id", handler.GetGame)
+	api.POST("/games/:id/join", handler.JoinGame)
 
 	// Player routes
 	api.POST("/games/:id/players/:name/ready", handler.SetPlayerReady)

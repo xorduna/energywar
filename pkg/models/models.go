@@ -42,21 +42,22 @@ type Board struct {
 
 // PlayerInfo represents a player's information in the game
 type PlayerInfo struct {
-	Ready         bool `json:"ready"`
-	TotalCapacity int  `json:"total_capacity"`
-	Capacity      int  `json:"capacity"`
+	Ready         bool   `json:"ready"`
+	TotalCapacity int    `json:"total_capacity"`
+	Capacity      int    `json:"capacity"`
+	Token         string `json:"token,omitempty"`
 	Board         *Board
 }
 
 // Game represents a game session
 type Game struct {
-	ID      string                `json:"id"`
-	Status  GameStatus            `json:"status"`
-	Turn    string                `json:"turn"`
-	Winner  *string               `json:"winner"`
-	Players map[string]PlayerInfo `json:"players"`
-	Size    int                   `json:"-"`
-	Capacity int                  `json:"-"`
+	ID       string                `json:"id"`
+	Status   GameStatus            `json:"status"`
+	Turn     string                `json:"turn"`
+	Winner   *string               `json:"winner"`
+	Players  map[string]PlayerInfo `json:"players"`
+	Size     int                   `json:"-"`
+	Capacity int                   `json:"-"`
 }
 
 // PlantCapacity returns the capacity of a plant type

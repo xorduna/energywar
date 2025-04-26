@@ -26,7 +26,7 @@ func NewGameManager() *GameManager {
 }
 
 // CreateGame creates a new game with the given parameters
-func (gm *GameManager) CreateGame(size int, capacity int, players []string) (*models.Game, error) {
+func (gm *GameManager) CreateGame(size int, capacity int) (*models.Game, error) {
 	// Validate parameters
 	if size < 5 || size > 20 {
 		return nil, errors.New("size should be between 5 and 20")
@@ -34,23 +34,9 @@ func (gm *GameManager) CreateGame(size int, capacity int, players []string) (*mo
 	if capacity <= 0 {
 		return nil, errors.New("capacity should be greater than 0")
 	}
-	if len(players) != 2 {
-		return nil, errors.New("only 2 players are supported")
-	}
 
-	// Sort players alphabetically
-	sort.Strings(players)
-
-	// Create player info map
+	// Create empty player info map
 	playerInfoMap := make(map[string]models.PlayerInfo)
-	for _, player := range players {
-		playerInfoMap[player] = models.PlayerInfo{
-			Ready:         false,
-			TotalCapacity: 0,
-			Capacity:      0,
-			Board:         &models.Board{},
-		}
-	}
 
 	// Generate a unique ID
 	id := generateID()
@@ -59,7 +45,7 @@ func (gm *GameManager) CreateGame(size int, capacity int, players []string) (*mo
 	game := &models.Game{
 		ID:       id,
 		Status:   models.GameStatusPending,
-		Turn:     players[0], // First player in alphabetical order
+		Turn:     "",
 		Winner:   nil,
 		Players:  playerInfoMap,
 		Size:     size,
@@ -72,6 +58,55 @@ func (gm *GameManager) CreateGame(size int, capacity int, players []string) (*mo
 	gm.mutex.Unlock()
 
 	return game, nil
+}
+
+// JoinGame allows a player to join an existing game
+func (gm *GameManager) JoinGame(gameID string, playerName string) (string, error) {
+	gm.mutex.Lock()
+	defer gm.mutex.Unlock()
+
+	// Get the game
+	game, exists := gm.games[gameID]
+	if !exists {
+		return "", errors.New("game not found")
+	}
+
+	// Check if the game is still in PENDING status
+	if game.Status != models.GameStatusPending {
+		return "", errors.New("GAME_ALREADY_STARTED")
+	}
+
+	// Check if the player already exists
+	if _, exists := game.Players[playerName]; exists {
+		return "", errors.New("player already exists in this game")
+	}
+
+	// Generate a random token for the player
+	token := generateToken()
+
+	// Add the player to the game
+	game.Players[playerName] = models.PlayerInfo{
+		Ready:         false,
+		TotalCapacity: 0,
+		Capacity:      0,
+		Token:         token,
+		Board:         &models.Board{},
+	}
+
+	// If this is the first player, set the turn
+	if game.Turn == "" && len(game.Players) > 0 {
+		// Get all player names
+		players := make([]string, 0, len(game.Players))
+		for player := range game.Players {
+			players = append(players, player)
+		}
+		// Sort players alphabetically
+		sort.Strings(players)
+		// Set turn to the first player
+		game.Turn = players[0]
+	}
+
+	return token, nil
 }
 
 // GetGame retrieves a game by ID
@@ -403,6 +438,17 @@ func generateID() string {
 	rand.Seed(time.Now().UnixNano())
 	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
 	b := make([]byte, 8)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+// generateToken generates a random token for player authentication
+func generateToken() string {
+	rand.Seed(time.Now().UnixNano())
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, 10)
 	for i := range b {
 		b[i] = charset[rand.Intn(len(charset))]
 	}

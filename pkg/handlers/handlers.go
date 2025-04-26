@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/xorduna/energywar/pkg/game"
@@ -29,7 +28,6 @@ func NewHandler(gm *game.GameManager) *Handler {
 // @Produce json
 // @Param size query int false "Board size (5-20)" default(10)
 // @Param capacity query int false "Required capacity" default(1000)
-// @Param players query string true "Comma-separated list of player names"
 // @Success 200 {object} models.Game
 // @Failure 400 {object} models.ErrorResponse
 // @Router /games [post]
@@ -37,7 +35,6 @@ func (h *Handler) CreateGame(c echo.Context) error {
 	// Parse query parameters
 	sizeStr := c.QueryParam("size")
 	capacityStr := c.QueryParam("capacity")
-	playersStr := c.QueryParam("players")
 
 	// Default values
 	size := 10
@@ -67,23 +64,8 @@ func (h *Handler) CreateGame(c echo.Context) error {
 		}
 	}
 
-	// Parse players
-	if playersStr == "" {
-		return c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Status: "ERROR",
-			Error:  "INVALID_PARAMETERS",
-		})
-	}
-	players := strings.Split(playersStr, ",")
-	if len(players) != 2 {
-		return c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Status: "ERROR",
-			Error:  "INVALID_PARAMETERS",
-		})
-	}
-
 	// Create the game
-	gameObj, err := h.GameManager.CreateGame(size, capacity, players)
+	gameObj, err := h.GameManager.CreateGame(size, capacity)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Status: "ERROR",
@@ -92,6 +74,49 @@ func (h *Handler) CreateGame(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, gameObj)
+}
+
+// JoinGameResponse represents the response for joining a game
+type JoinGameResponse struct {
+	Token string `json:"token"`
+}
+
+// @Summary Join a game
+// @Description Allows a player to join an existing game
+// @Tags games
+// @Accept json
+// @Produce json
+// @Param id path string true "Game ID"
+// @Param player query string true "Player name"
+// @Success 200 {object} JoinGameResponse
+// @Failure 400 {object} models.ErrorResponse
+// @Router /games/{id}/join [post]
+func (h *Handler) JoinGame(c echo.Context) error {
+	// Get game ID from path
+	id := c.Param("id")
+
+	// Get player name from query
+	playerName := c.QueryParam("player")
+
+	if playerName == "" {
+		return c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "INVALID_PARAMETERS",
+		})
+	}
+
+	// Join the game
+	token, err := h.GameManager.JoinGame(id, playerName)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, JoinGameResponse{
+		Token: token,
+	})
 }
 
 // @Summary Get game status

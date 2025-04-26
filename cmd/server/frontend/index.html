@@ -165,14 +165,17 @@
         <div class="action-row">
             <input type="text" id="play-game-id" placeholder="Enter Game ID">
             <input type="text" id="player-name" placeholder="Enter Player Name">
-            <button id="play-game-btn" class="button">Play</button>
+            <button id="play-game-btn" class="button">Join</button>
         </div>
     </div>    
 
     <h2>API Examples</h2>
     
     <h3>Create a Game</h3>
-    <pre><code>POST /api/games?size=10&capacity=1000&players=alice,bob</code></pre>
+    <pre><code>POST /api/games?size=10&capacity=1000</code></pre>
+    
+    <h3>Join a Game</h3>
+    <pre><code>POST /api/games/:id/join?player=name</code></pre>
     
     <h3>Set Up a Board</h3>
     <pre><code>POST /api/games/:id/players/:name/board
@@ -216,11 +219,10 @@
                 // Default values for a new game
                 const size = 10;
                 const capacity = 1000;
-                const players = 'alice,bob'; // Default player names
                 
                 // Create a new game via API
                 $.ajax({
-                    url: `/api/games?size=${size}&capacity=${capacity}&players=${players}`,
+                    url: `/api/games?size=${size}&capacity=${capacity}`,
                     type: 'POST',
                     success: function(response) {
                         // Display the game ID
@@ -245,7 +247,7 @@
                 window.location.href = `game.html?id=${gameId}`;
             });
             
-            // Play Game button click handler
+            // Join Game button click handler
             $('#play-game-btn').click(function() {
                 const gameId = $('#play-game-id').val().trim();
                 const playerName = $('#player-name').val().trim();
@@ -255,8 +257,18 @@
                     return;
                 }
                 
-                // Redirect to the player page with game ID and player name as query parameters
-                window.location.href = `player.html?id=${gameId}&player=${playerName}`;
+                // Join the game via API
+                $.ajax({
+                    url: `/api/games/${gameId}/join?player=${playerName}`,
+                    type: 'POST',
+                    success: function(response) {
+                        // Redirect to the player page with game ID, player name, and token as query parameters
+                        window.location.href = `player.html?id=${gameId}&player=${playerName}&token=${response.token}`;
+                    },
+                    error: function(xhr) {
+                        alert('Error joining game: ' + JSON.stringify(xhr.responseJSON));
+                    }
+                });
             });
         });
     </script>

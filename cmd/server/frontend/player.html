@@ -224,6 +224,10 @@
         <p id="game-status">Status: Loading...</p>
         <p id="game-turn">Turn: Loading...</p>
         <p id="game-winner">Winner: None</p>
+        <div id="players-list">
+            <h3>Players</h3>
+            <ul id="players"></ul>
+        </div>
     </div>
     
     <div class="setup-controls" id="setup-controls">
@@ -305,10 +309,14 @@
     
     <script>
         $(document).ready(function() {
-            // Get game ID and player name from URL parameters
+            // Get game ID, player name, and token from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const gameId = urlParams.get('id');
             const playerName = urlParams.get('player');
+            const token = urlParams.get('token');
+            
+            // Store player name in window object for reference in other functions
+            window.playerName = playerName;
             
             if (!gameId || !playerName) {
                 showError('Game ID and player name are required!');
@@ -506,8 +514,20 @@
                         // Get player names
                         const playerNames = Object.keys(data.players);
                         
+                        // Update players list
+                        const playersList = $('#players');
+                        playersList.empty();
+                        
+                        playerNames.forEach(playerName => {
+                            const playerInfo = data.players[playerName];
+                            const readyStatus = playerInfo.ready ? 'Ready' : 'Not Ready';
+                            const isCurrentPlayer = playerName === window.playerName;
+                            const playerLabel = isCurrentPlayer ? `${playerName} (You)` : playerName;
+                            playersList.append(`<li>${playerLabel} - ${readyStatus} (Capacity: ${playerInfo.capacity}/${playerInfo.total_capacity})</li>`);
+                        });
+                        
+                        // Find opponent name if there are at least 2 players
                         if (playerNames.length >= 2) {
-                            // Find opponent name
                             opponentName = playerNames.find(name => name !== playerName);
                             
                             // Update player info
@@ -516,8 +536,6 @@
                             
                             // Update capacity requirements
                             requiredCapacity = data.capacity || 1000; // Default to 1000 if not provided
-                            console.log("Game capacity:", data.capacity);
-                            console.log("Required capacity set to:", requiredCapacity);
                             $('#required-capacity').text(`Required: ${requiredCapacity}`);
                             
                             // Check if player is ready
@@ -529,6 +547,10 @@
                             // Fetch boards
                             fetchPlayerBoard();
                             fetchOpponentBoard();
+                        } else {
+                            // Only one player (current player) in the game
+                            $('#opponent-board').empty();
+                            $('#opponent-capacity').text('Waiting for opponent to join...');
                         }
                     },
                     error: function(xhr) {

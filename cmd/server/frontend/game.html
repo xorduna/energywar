@@ -146,6 +146,10 @@
         <p id="game-status">Status: Loading...</p>
         <p id="game-turn">Turn: Loading...</p>
         <p id="game-winner">Winner: None</p>
+        <div id="players-list">
+            <h3>Players</h3>
+            <ul id="players"></ul>
+        </div>
     </div>
     
     <div class="boards-container">
@@ -317,13 +321,35 @@
                         // Get player names
                         const playerNames = Object.keys(gameData.players);
                         
-                        if (playerNames.length >= 2) {
-                            const player1 = playerNames[0];
-                            const player2 = playerNames[1];
+                        // Update players list
+                        const playersList = $('#players');
+                        playersList.empty();
+                        
+                        playerNames.forEach(playerName => {
+                            const playerInfo = gameData.players[playerName];
+                            const readyStatus = playerInfo.ready ? 'Ready' : 'Not Ready';
+                            playersList.append(`<li>${playerName} - ${readyStatus} (Capacity: ${playerInfo.capacity}/${playerInfo.total_capacity})</li>`);
+                        });
+                        
+                        // Update board displays
+                        if (playerNames.length > 0) {
+                            // Show boards for up to 2 players
+                            const displayCount = Math.min(playerNames.length, 2);
                             
-                            // Fetch boards for both players
-                            fetchPlayerBoard(player1, 'player1-board');
-                            fetchPlayerBoard(player2, 'player2-board');
+                            for (let i = 0; i < displayCount; i++) {
+                                const playerName = playerNames[i];
+                                const boardId = `player${i+1}-board`;
+                                
+                                // Fetch board for this player
+                                fetchPlayerBoard(playerName, boardId);
+                            }
+                            
+                            // Hide any unused board containers
+                            if (playerNames.length < 2) {
+                                $('#player2-name').text('Waiting for player...');
+                                $('#player2-capacity').text('');
+                                $('#player2-board').empty();
+                            }
                         }
                     },
                     error: function(xhr) {
