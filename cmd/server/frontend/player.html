@@ -618,15 +618,15 @@
                         // Move setup controls next to the player's board
                         $('#setup-controls').insertAfter('.board:first-child');
                         
-                        // Clear opponents container
-                        $('#opponents-container').empty();
+                        // Hide opponents container completely
+                        $('#opponents-container').hide();
                     } else {
                         // Player is ready but game hasn't started yet
                         $('#setup-controls').hide();
                         $('#strike-controls').hide();
                         
                         // Show waiting message in opponents container
-                        $('#opponents-container').html(`
+                        $('#opponents-container').show().html(`
                             <div class="board">
                                 <h3>Waiting for Opponents</h3>
                                 <p>Waiting for other players to be ready...</p>
@@ -636,11 +636,8 @@
                         showSuccess('You are ready! Waiting for other players to be ready...');
                     }
                 } else if (status === 'IN_PROGRESS') {
-                    // Hide setup controls, show opponent's board
+                    // Hide setup controls
                     $('#setup-controls').hide();
-                    $('.board:eq(1) h3').text('Opponent\'s Board');
-                    $('.board:eq(1) #opponent-board').show();
-                    $('.board:eq(1) #opponent-capacity').show();
                     
                     // Hide all setup-related elements
                     $('.plant-selector').hide();
@@ -650,6 +647,18 @@
                     
                     // Always show strike controls during gameplay
                     $('#strike-controls').show();
+                    
+                    // Make sure opponents container is visible
+                    $('#opponents-container').show();
+                    
+                    // Make sure opponent boards are visible
+                    const opponents = Object.keys(gameData.players).filter(name => name !== playerName);
+                    if (opponents.length > 0) {
+                        // Fetch boards for all opponents
+                        opponents.forEach((opponent, index) => {
+                            fetchOpponentBoard(opponent, `opponent${index+1}-board`);
+                        });
+                    }
                     
                     // Update status message based on turn
                     if (turn === playerName) {
@@ -742,6 +751,12 @@
                 
                 // Update capacity display
                 $(`#${playerId}-capacity`).text(`Capacity: ${board.capacity} / ${board.total_capacity}`);
+                
+                // Check if the grid exists, if not create it
+                if ($(`#${boardId} .grid-header`).length === 0) {
+                    console.log(`Creating grid for ${boardId}`);
+                    createGrid(boardId);
+                }
                 
                 // Clear all cell classes
                 $(`#${boardId} .cell`).removeClass('hit miss').empty();
