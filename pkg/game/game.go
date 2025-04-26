@@ -76,6 +76,11 @@ func (gm *GameManager) JoinGame(gameID string, playerName string) (string, error
 		return "", errors.New("GAME_ALREADY_STARTED")
 	}
 
+	// Check if max players limit (4) is reached
+	if len(game.Players) >= 4 {
+		return "", errors.New("game is full (max 4 players)")
+	}
+
 	// Check if the player already exists
 	if _, exists := game.Players[playerName]; exists {
 		return "", errors.New("player already exists in this game")
@@ -202,7 +207,7 @@ func (gm *GameManager) SetPlayerReady(gameID string, playerName string) error {
 	playerInfo.Ready = true
 	game.Players[playerName] = playerInfo
 
-	// Check if all players are ready
+	// Check if all players are ready and there are at least 2 players
 	allReady := true
 	for _, info := range game.Players {
 		if !info.Ready {
@@ -211,8 +216,8 @@ func (gm *GameManager) SetPlayerReady(gameID string, playerName string) error {
 		}
 	}
 
-	// If all players are ready, start the game
-	if allReady {
+	// If all players are ready and there are at least 2 players, start the game
+	if allReady && len(game.Players) >= 2 {
 		game.Status = models.GameStatusInProgress
 
 		// Set the turn to the first player in alphabetical order
@@ -328,12 +333,18 @@ func (gm *GameManager) Strike(gameID string, playerName string, targetName strin
 		}
 		sort.Strings(players)
 
-		// Set the turn to the next player
-		if players[0] == playerName {
-			game.Turn = players[1]
-		} else {
-			game.Turn = players[0]
+		// Find current player's index
+		currentIndex := -1
+		for i, player := range players {
+			if player == playerName {
+				currentIndex = i
+				break
+			}
 		}
+
+		// Set turn to next player (cycling through all players)
+		nextIndex := (currentIndex + 1) % len(players)
+		game.Turn = players[nextIndex]
 	}
 
 	if hit {

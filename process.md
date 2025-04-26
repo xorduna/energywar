@@ -156,3 +156,15 @@ The game now supports multiple players with the following features:
    - The game view page shows boards for all players
    - The player page shows all opponent boards
    - Players can strike any opponent's board when it's their turn
+
+## Recent Game Logic Improvements
+
+### Multiplayer Turn Management
+- Fixed turn cycling logic to properly handle 2-4 players
+- Implemented modulo-based turn progression ensuring all players get their turn
+- Prevents single player from starting the game prematurely
+
+### Player Limit and Game Start
+- Added a maximum player limit of 4 players per game
+- Prevents more than 4 players from joining a single game
+- Requires at least 2 players to be ready before game can start
