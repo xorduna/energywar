@@ -110,6 +110,7 @@ The following API endpoints were implemented:
 
 - `POST /api/games`: Create a new game
 - `GET /api/games/:id`: Get game status
+- `GET /api/games/:id/status`: Get limited game status
 - `POST /api/games/:id/players/:name/ready`: Set player as ready
 - `POST /api/games/:id/players/:name/strike`: Strike a coordinate
 - `POST /api/games/:id/players/:name/board`: Set player board
@@ -168,3 +169,11 @@ The game now supports multiple players with the following features:
 - Added a maximum player limit of 4 players per game
 - Prevents more than 4 players from joining a single game
 - Requires at least 2 players to be ready before game can start
+
+### Game Visibility and Security Enhancements
+- Added support for public and private game modes
+- Implemented token hiding in game status and game information endpoints
+- Created a new `/games/:id/status` endpoint for consistent limited game information
+- Ensured sensitive information like player tokens is never exposed
+- Added a dropdown in the frontend to select game visibility during creation
+- Implemented consistent game information retrieval for both public and private games

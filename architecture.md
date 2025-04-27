@@ -2,189 +2,119 @@
 
 ## Overview
 
-Energy War Game is a "battleship" like game where players set up power plants (nuclear, gas, wind, or solar) to meet a required capacity. Players take turns striking at each other's plants to reduce their opponent's capacity. The game ends when one of the players has below 10% of the defined capacity.
+The Energy War Game is a multiplayer, turn-based strategy game implemented as a web application with a backend API and a frontend interface. The architecture is designed to be modular, scalable, and secure.
 
-## System Architecture
+## System Components
 
-The application follows a client-server architecture with a Go backend and HTML/CSS/JavaScript frontend.
+### Backend (Go)
+- **Language**: Go (Golang)
+- **Web Framework**: Echo
+- **API Documentation**: Swagger
 
-### Backend
+#### Key Packages
+1. `pkg/models`
+   - Defines core data structures
+   - Manages game and board representations
+   - Handles coordinate and plant type validations
 
-The backend is built using Go with the Echo framework and is organized into several packages:
+2. `pkg/game`
+   - Implements game logic
+   - Manages game state
+   - Handles player actions and game progression
 
-```
-energywar/
-├── cmd/
-│   └── server/
-│       ├── main.go                # Server entry point
-│       └── frontend/              # Frontend files embedded in the binary
-├── pkg/
-│   ├── models/                    # Data models
-│   ├── game/                      # Game logic
-│   └── handlers/                  # API handlers
-└── docs/                          # Swagger documentation
-```
-
-#### Key Components
-
-1. **Models (`pkg/models/models.go`)**
-   - Defines data structures for the game (Plant, Board, Game, etc.)
-   - Implements utility functions for coordinate parsing and validation
-   - Provides board visualization functions
-
-2. **Game Logic (`pkg/game/game.go`)**
-   - Implements the `GameManager` to manage all active games
-   - Handles game creation, board setup, player actions
-   - Implements strike mechanics and win condition checking
-   - Manages turn-based gameplay
-
-3. **API Handlers (`pkg/handlers/handlers.go`)**
-   - Implements RESTful API endpoints
-   - Handles request validation and error responses
-   - Provides Swagger annotations for API documentation
-
-4. **Server (`cmd/server/main.go`)**
-   - Sets up the Echo framework
-   - Registers API routes
-   - Configures middleware
-   - Embeds frontend files
-   - Sets up Swagger documentation
-
-### Frontend
-
-The frontend is built using HTML, CSS, and JavaScript with jQuery for AJAX requests. It follows a modular structure with separation of concerns:
-
-```
-frontend/
-├── index.html              # Main landing page
-├── game.html               # Game view page
-├── player.html             # Player interaction page
-└── assets/
-    ├── css/                # Stylesheets
-    │   └── player.css      # Styles for player page
-    ├── js/                 # JavaScript files
-    │   └── player.js       # Logic for player page
-    └── img/                # Image resources
-        ├── gas.png         # Gas plant icon
-        ├── nuclear.png     # Nuclear plant icon
-        ├── solar.png       # Solar plant icon
-        └── wind.png        # Wind plant icon
-```
-
-It consists of three main pages:
-
-1. **Index Page (`index.html`)**
-   - Game description and rules
-   - Power plant information
-   - Game creation and joining interface
-
-2. **Game View Page (`game.html`)**
-   - Displays game status and player information
-   - Shows boards for all players
-   - Updates in real-time through polling
-
-3. **Player Page (`player.html`)**
-   - Board setup interface
-   - Strike interface during gameplay
-   - Real-time game status updates
-   - Modular design with:
-     - Separated CSS in player.css
-     - Separated JavaScript in player.js
+3. `pkg/handlers`
+   - Manages API request handling
+   - Implements request validation
+   - Provides interface between API routes and game logic
 
 ### API Endpoints
 
-The API follows RESTful principles and is organized under the `/api` path:
-
 #### Game Management
-- `POST /api/games` - Create a new game
-- `GET /api/games/:id` - Get game status
-- `POST /api/games/:id/join` - Join a game
+- `POST /games`: Create a new game
+- `GET /games/:id`: Retrieve game status
+- `GET /games/:id/status`: Get limited game information
+- `POST /games/:id/join`: Join an existing game
 
 #### Player Actions
-- `POST /api/games/:id/players/:name/ready` - Mark player as ready
-- `POST /api/games/:id/players/:name/strike` - Strike a coordinate
-- `POST /api/games/:id/players/:name/board` - Set player board
-- `GET /api/games/:id/players/:name/board` - Get player board
-- `GET /api/games/:id/players/:name/board/map` - Get ASCII representation of player board
+- `POST /games/:id/players/:name/ready`: Mark player as ready
+- `POST /games/:id/players/:name/board`: Set player's board
+- `POST /games/:id/players/:name/strike`: Perform a strike action
 
-#### Opponent Information
-- `GET /api/games/:id/opponent/:name/board` - Get opponent blind board
-- `GET /api/games/:id/opponent/:name/board/map` - Get ASCII representation of opponent blind board
+#### Board Information
+- `GET /games/:id/players/:name/board`: Get player's board
+- `GET /games/:id/opponent/:name/board`: Get opponent's blind board
 
-## Data Flow
+## Security Features
 
-1. **Game Creation**
-   - Client sends a request to create a game
-   - Server creates a game with a unique ID
-   - Client receives the game ID
+### Game Visibility
+- Support for public and private game modes
+- Configurable game visibility during game creation
+- Limited information exposure for non-public games
 
-2. **Player Joining**
-   - Client sends a request to join a game with a player name
-   - Server adds the player to the game
-   - Client receives a token for authentication
+### Token Management
+- Player tokens are never exposed in game status endpoints
+- Tokens only returned during game join process
+- Consistent token hiding across all game information retrieval
 
-3. **Board Setup**
-   - Client sends a board configuration
-   - Server validates the board
-   - Client marks player as ready
+## Game Mechanics
 
-4. **Gameplay**
-   - Server determines turn order
-   - Client sends strike requests
-   - Server processes strikes and updates game state
-   - Client polls for game updates
+### Multiplayer Support
+- 2-4 players per game
+- Turn-based gameplay
+- Alphabetical turn order
+- Simultaneous board setup
 
-5. **Game End**
-   - Server determines the winner
-   - Client displays the result
+### Power Plant Mechanics
+- Four plant types: Nuclear, Gas, Wind, Solar
+- Unique capacities and board sizes
+- Strategic plant placement
+- Capacity-based win conditions
 
-## Multiplayer Support
+## Frontend Architecture
 
-The game supports multiple players with the following features:
+### Technologies
+- HTML5
+- CSS3
+- JavaScript (jQuery)
+- Responsive design
 
-1. **Player Management**
-   - Players can join a game using a unique name
-   - Each player has their own board and capacity
+### Key Features
+- Interactive game creation
+- Real-time game status updates
+- Board visualization
+- Player action management
 
-2. **Turn-Based Gameplay**
-   - Players take turns in alphabetical order
-   - Only the player whose turn it is can strike
+## Security Principles
 
-3. **Opponent Boards**
-   - Players can see blind versions of all opponent boards
-   - Hits and misses are visible, but plant locations are hidden
+- No sensitive information exposure
+- Consistent game state management
+- Secure token handling
+- Input validation at all levels
 
-4. **Real-time Updates**
-   - Clients poll the server for game updates
-   - UI updates to reflect the current game state
+## Scalability Considerations
 
-## Security Considerations
+- Stateless API design
+- Modular package structure
+- Extensible game logic
+- Easy to add new features or game modes
 
-1. **Authentication**
-   - Players receive a token when joining a game
-   - Future implementation could require token for player-specific actions
+## Performance Optimization
 
-2. **Input Validation**
-   - All API inputs are validated
-   - Coordinate validation ensures actions are within board boundaries
-   - Plant placement validation prevents overlapping plants
+- Efficient game state management
+- Minimal data transfer
+- Lightweight API responses
+- Optimized game logic algorithms
+
+## Deployment
+
+- Containerization support
+- Embedded frontend assets
+- Single binary deployment
+- Swagger documentation included
 
 ## Future Enhancements
 
-1. **WebSocket Support**
-   - Replace polling with WebSocket for real-time updates
-
-2. **User Authentication**
-   - Implement user accounts and authentication
-
-3. **Game History**
-   - Store and display game history
-
-4. **Enhanced UI**
-   - Animations for strikes
-   - Improved visual feedback
-
-5. **Game Variations**
-   - Different board sizes
-   - Additional power plant types
-   - Special abilities
+- Persistent game storage
+- Advanced matchmaking
+- Spectator mode
+- Detailed game analytics

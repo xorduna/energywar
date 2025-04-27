@@ -46,7 +46,7 @@ type PlayerInfo struct {
 	TotalCapacity int    `json:"total_capacity"`
 	Capacity      int    `json:"capacity"`
 	Token         string `json:"token,omitempty"`
-	Board         *Board
+	Board         *Board `json:"board,omitempty"`
 }
 
 // Game represents a game session

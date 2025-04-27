@@ -155,29 +155,26 @@ func (h *Handler) GetGame(c echo.Context) error {
 		})
 	}
 
-	// If the game is not public, return limited information
-	if !gameObj.Public {
-		limitedGameObj := &models.Game{
-			ID:     gameObj.ID,
-			Status: gameObj.Status,
-			Turn:   gameObj.Turn,
-			Winner: gameObj.Winner,
-			Players: func() map[string]models.PlayerInfo {
-				limitedPlayers := make(map[string]models.PlayerInfo)
-				for name, player := range gameObj.Players {
-					limitedPlayers[name] = models.PlayerInfo{
-						Ready:         player.Ready,
-						TotalCapacity: player.TotalCapacity,
-						Capacity:      player.Capacity,
-					}
+	// Create a copy of the game object with tokens hidden
+	limitedGameObj := &models.Game{
+		ID:     gameObj.ID,
+		Status: gameObj.Status,
+		Turn:   gameObj.Turn,
+		Winner: gameObj.Winner,
+		Players: func() map[string]models.PlayerInfo {
+			limitedPlayers := make(map[string]models.PlayerInfo)
+			for name, player := range gameObj.Players {
+				limitedPlayers[name] = models.PlayerInfo{
+					Ready:         player.Ready,
+					TotalCapacity: player.TotalCapacity,
+					Capacity:      player.Capacity,
 				}
-				return limitedPlayers
-			}(),
-		}
-		return c.JSON(http.StatusOK, limitedGameObj)
+			}
+			return limitedPlayers
+		}(),
 	}
 
-	return c.JSON(http.StatusOK, gameObj)
+	return c.JSON(http.StatusOK, limitedGameObj)
 }
 
 // @Summary Set player ready
