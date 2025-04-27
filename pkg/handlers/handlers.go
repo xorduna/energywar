@@ -35,10 +35,12 @@ func (h *Handler) CreateGame(c echo.Context) error {
 	// Parse query parameters
 	sizeStr := c.QueryParam("size")
 	capacityStr := c.QueryParam("capacity")
+	publicStr := c.QueryParam("public")
 
 	// Default values
 	size := 10
 	capacity := 1000
+	public := false
 
 	// Parse size
 	if sizeStr != "" {
@@ -64,8 +66,20 @@ func (h *Handler) CreateGame(c echo.Context) error {
 		}
 	}
 
+	// Parse public
+	if publicStr != "" {
+		var err error
+		public, err = strconv.ParseBool(publicStr)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, models.ErrorResponse{
+				Status: "ERROR",
+				Error:  "INVALID_PARAMETERS",
+			})
+		}
+	}
+
 	// Create the game
-	gameObj, err := h.GameManager.CreateGame(size, capacity)
+	gameObj, err := h.GameManager.CreateGame(size, capacity, public)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Status: "ERROR",
@@ -139,6 +153,28 @@ func (h *Handler) GetGame(c echo.Context) error {
 			Status: "ERROR",
 			Error:  err.Error(),
 		})
+	}
+
+	// If the game is not public, return limited information
+	if !gameObj.Public {
+		limitedGameObj := &models.Game{
+			ID:     gameObj.ID,
+			Status: gameObj.Status,
+			Turn:   gameObj.Turn,
+			Winner: gameObj.Winner,
+			Players: func() map[string]models.PlayerInfo {
+				limitedPlayers := make(map[string]models.PlayerInfo)
+				for name, player := range gameObj.Players {
+					limitedPlayers[name] = models.PlayerInfo{
+						Ready:         player.Ready,
+						TotalCapacity: player.TotalCapacity,
+						Capacity:      player.Capacity,
+					}
+				}
+				return limitedPlayers
+			}(),
+		}
+		return c.JSON(http.StatusOK, limitedGameObj)
 	}
 
 	return c.JSON(http.StatusOK, gameObj)
@@ -374,4 +410,48 @@ func (h *Handler) GetOpponentBoardMap(c echo.Context) error {
 	}
 
 	return c.String(http.StatusOK, boardMap)
+}
+
+// @Summary Get game status
+// @Description Gets the limited status of a game
+// @Tags games
+// @Accept json
+// @Produce json
+// @Param id path string true "Game ID"
+// @Success 200 {object} models.Game
+// @Failure 404 {object} models.ErrorResponse
+// @Router /games/{id}/status [get]
+func (h *Handler) GetGameStatus(c echo.Context) error {
+	// Get game ID from path
+	id := c.Param("id")
+
+	// Get the game
+	gameObj, err := h.GameManager.GetGame(id)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  err.Error(),
+		})
+	}
+
+	// Create a limited view of the game
+	limitedGameObj := &models.Game{
+		ID:     gameObj.ID,
+		Status: gameObj.Status,
+		Turn:   gameObj.Turn,
+		Winner: gameObj.Winner,
+		Players: func() map[string]models.PlayerInfo {
+			limitedPlayers := make(map[string]models.PlayerInfo)
+			for name, player := range gameObj.Players {
+				limitedPlayers[name] = models.PlayerInfo{
+					Ready:         player.Ready,
+					TotalCapacity: player.TotalCapacity,
+					Capacity:      player.Capacity,
+				}
+			}
+			return limitedPlayers
+		}(),
+	}
+
+	return c.JSON(http.StatusOK, limitedGameObj)
 }

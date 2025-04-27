@@ -26,7 +26,7 @@ func NewGameManager() *GameManager {
 }
 
 // CreateGame creates a new game with the given parameters
-func (gm *GameManager) CreateGame(size int, capacity int) (*models.Game, error) {
+func (gm *GameManager) CreateGame(size int, capacity int, public bool) (*models.Game, error) {
 	// Validate parameters
 	if size < 5 || size > 20 {
 		return nil, errors.New("size should be between 5 and 20")
@@ -50,6 +50,7 @@ func (gm *GameManager) CreateGame(size int, capacity int) (*models.Game, error) 
 		Players:  playerInfoMap,
 		Size:     size,
 		Capacity: capacity,
+		Public:   public,
 	}
 
 	// Store the game

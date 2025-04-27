@@ -423,4 +423,29 @@ paths:
       summary: Strike a coordinate
       tags:
       - players
+  /games/{id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Gets the limited status of a game
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Game'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get game status
+      tags:
+      - games
 swagger: "2.0"
