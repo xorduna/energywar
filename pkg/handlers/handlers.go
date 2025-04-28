@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -19,6 +20,28 @@ func NewHandler(gm *game.GameManager) *Handler {
 	return &Handler{
 		GameManager: gm,
 	}
+}
+
+// validatePlayerToken checks if the provided token matches the player's token
+func (h *Handler) validatePlayerToken(gameID, playerName, token string) error {
+	// Get the game
+	game, err := h.GameManager.GetGame(gameID)
+	if err != nil {
+		return errors.New("game not found")
+	}
+
+	// Check if the player exists
+	playerInfo, exists := game.Players[playerName]
+	if !exists {
+		return errors.New("player not found")
+	}
+
+	// Check if the token matches
+	if playerInfo.Token != token {
+		return errors.New("invalid token")
+	}
+
+	return nil
 }
 
 // @Summary Create a new game
@@ -184,13 +207,32 @@ func (h *Handler) GetGame(c echo.Context) error {
 // @Produce json
 // @Param id path string true "Game ID"
 // @Param name path string true "Player name"
+// @Param token query string true "Player token"
 // @Success 200 {object} models.ReadyResponse
 // @Failure 400 {object} models.ErrorResponse
+// @Failure 403 {object} models.ErrorResponse
 // @Router /games/{id}/players/{name}/ready [post]
 func (h *Handler) SetPlayerReady(c echo.Context) error {
 	// Get game ID and player name from path
 	id := c.Param("id")
 	name := c.Param("name")
+
+	// Get token from query parameter
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "MISSING_TOKEN",
+		})
+	}
+
+	// Validate the token
+	if err := h.validatePlayerToken(id, name, token); err != nil {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "INVALID_TOKEN",
+		})
+	}
 
 	// Set the player as ready
 	err := h.GameManager.SetPlayerReady(id, name)
@@ -213,16 +255,35 @@ func (h *Handler) SetPlayerReady(c echo.Context) error {
 // @Produce json
 // @Param id path string true "Game ID"
 // @Param name path string true "Player name"
+// @Param token query string true "Player token"
 // @Param target query string true "Target player name"
 // @Param y query string true "Y coordinate (A-Z)"
 // @Param x query int true "X coordinate (1-size)"
 // @Success 200 {object} models.StrikeResponse
 // @Failure 400 {object} models.ErrorResponse
+// @Failure 403 {object} models.ErrorResponse
 // @Router /games/{id}/players/{name}/strike [post]
 func (h *Handler) Strike(c echo.Context) error {
 	// Get game ID and player name from path
 	id := c.Param("id")
 	name := c.Param("name")
+
+	// Get token from query parameter
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "MISSING_TOKEN",
+		})
+	}
+
+	// Validate the token
+	if err := h.validatePlayerToken(id, name, token); err != nil {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "INVALID_TOKEN",
+		})
+	}
 
 	// Get query parameters
 	target := c.QueryParam("target")
@@ -271,14 +332,33 @@ func (h *Handler) Strike(c echo.Context) error {
 // @Produce json
 // @Param id path string true "Game ID"
 // @Param name path string true "Player name"
+// @Param token query string true "Player token"
 // @Param board body models.Board true "Board configuration"
 // @Success 200 {object} models.Board
 // @Failure 400 {object} models.ErrorResponse
+// @Failure 403 {object} models.ErrorResponse
 // @Router /games/{id}/players/{name}/board [post]
 func (h *Handler) SetBoard(c echo.Context) error {
 	// Get game ID and player name from path
 	id := c.Param("id")
 	name := c.Param("name")
+
+	// Get token from query parameter
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "MISSING_TOKEN",
+		})
+	}
+
+	// Validate the token
+	if err := h.validatePlayerToken(id, name, token); err != nil {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "INVALID_TOKEN",
+		})
+	}
 
 	// Parse request body
 	board := new(models.Board)
@@ -308,6 +388,7 @@ func (h *Handler) SetBoard(c echo.Context) error {
 // @Produce json
 // @Param id path string true "Game ID"
 // @Param name path string true "Player name"
+// @Param token query string true "Player token"
 // @Success 200 {object} models.Board
 // @Failure 404 {object} models.ErrorResponse
 // @Router /games/{id}/players/{name}/board [get]
@@ -315,6 +396,16 @@ func (h *Handler) GetBoard(c echo.Context) error {
 	// Get game ID and player name from path
 	id := c.Param("id")
 	name := c.Param("name")
+
+	// Get token from query parameter
+	token := c.QueryParam("token")
+	// Validate the token
+	if err := h.validatePlayerToken(id, name, token); err != nil {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "INVALID_TOKEN",
+		})
+	}
 
 	// Get the board
 	board, err := h.GameManager.GetPlayerBoard(id, name)
@@ -362,13 +453,32 @@ func (h *Handler) GetOpponentBlindBoard(c echo.Context) error {
 // @Produce text/plain
 // @Param id path string true "Game ID"
 // @Param name path string true "Player name"
+// @Param token query string true "Player token"
 // @Success 200 {string} string
+// @Failure 403 {object} models.ErrorResponse
 // @Failure 404 {object} models.ErrorResponse
 // @Router /games/{id}/players/{name}/board/map [get]
 func (h *Handler) GetBoardMap(c echo.Context) error {
 	// Get game ID and player name from path
 	id := c.Param("id")
 	name := c.Param("name")
+
+	// Get token from query parameter
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "MISSING_TOKEN",
+		})
+	}
+
+	// Validate the token
+	if err := h.validatePlayerToken(id, name, token); err != nil {
+		return c.JSON(http.StatusForbidden, models.ErrorResponse{
+			Status: "ERROR",
+			Error:  "INVALID_TOKEN",
+		})
+	}
 
 	// Get the board map
 	boardMap, err := h.GameManager.GetBoardMap(id, name, false)

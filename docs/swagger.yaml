@@ -269,6 +269,11 @@ paths:
         name: name
         required: true
         type: string
+      - description: Player token
+        in: query
+        name: token
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -298,6 +303,11 @@ paths:
         name: name
         required: true
         type: string
+      - description: Player token
+        in: query
+        name: token
+        required: true
+        type: string
       - description: Board configuration
         in: body
         name: board
@@ -313,6 +323,10 @@ paths:
             $ref: '#/definitions/models.Board'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Set player board
@@ -334,6 +348,11 @@ paths:
         name: name
         required: true
         type: string
+      - description: Player token
+        in: query
+        name: token
+        required: true
+        type: string
       produces:
       - text/plain
       responses:
@@ -341,6 +360,10 @@ paths:
           description: OK
           schema:
             type: string
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -364,6 +387,11 @@ paths:
         name: name
         required: true
         type: string
+      - description: Player token
+        in: query
+        name: token
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -373,6 +401,10 @@ paths:
             $ref: '#/definitions/models.ReadyResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Set player ready
@@ -392,6 +424,11 @@ paths:
       - description: Player name
         in: path
         name: name
+        required: true
+        type: string
+      - description: Player token
+        in: query
+        name: token
         required: true
         type: string
       - description: Target player name
@@ -418,6 +455,10 @@ paths:
             $ref: '#/definitions/models.StrikeResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/models.ErrorResponse'
       summary: Strike a coordinate

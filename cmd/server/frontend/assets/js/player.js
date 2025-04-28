@@ -8,6 +8,24 @@ $(document).ready(function() {
     // Store player name in window object for reference in other functions
     window.playerName = playerName;
     
+    // Function to get the player token
+    function getPlayerToken() {
+        // First try to get token from URL parameters
+        const urlToken = urlParams.get('token');
+        if (urlToken) {
+            return urlToken;
+        }
+        
+        // Then try to get token from localStorage
+        const storedToken = localStorage.getItem('playerToken');
+        if (storedToken) {
+            return storedToken;
+        }
+        
+        // If no token found, throw an error
+        throw new Error('No player token available');
+    }
+    
     if (!gameId || !playerName) {
         showError('Game ID and player name are required!');
         return;
@@ -367,8 +385,10 @@ $(document).ready(function() {
             return;
         }
         
+        const token = getPlayerToken();
+
         $.ajax({
-            url: `/api/games/${gameId}/players/${playerName}/board`,
+            url: `/api/games/${gameId}/players/${playerName}/board?token=${token}`,
             type: 'GET',
             success: function(data) {
                 playerBoard = data;
@@ -615,14 +635,17 @@ $(document).ready(function() {
     }
     
     // Function to save the board to the server
-    function saveBoard(callback) {
-        // Ensure playerBoard.plants is initialized
-        if (!playerBoard.plants) {
-            playerBoard.plants = [];
-        }
+function saveBoard(callback) {
+    // Ensure playerBoard.plants is initialized
+    if (!playerBoard.plants) {
+        playerBoard.plants = [];
+    }
+    
+    try {
+        const token = getPlayerToken();
         
         $.ajax({
-            url: `/api/games/${gameId}/players/${playerName}/board`,
+            url: `/api/games/${gameId}/players/${playerName}/board?token=${token}`,
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -643,12 +666,19 @@ $(document).ready(function() {
                 showError('Error saving board: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error'));
             }
         });
+    } catch (error) {
+        console.error('Token error:', error);
+        showError('Failed to retrieve player token');
     }
+}
     
     // Function to mark player as ready
-    function setPlayerReady() {
+function setPlayerReady() {
+    try {
+        const token = getPlayerToken();
+        
         $.ajax({
-            url: `/api/games/${gameId}/players/${playerName}/ready`,
+            url: `/api/games/${gameId}/players/${playerName}/ready?token=${token}`,
             type: 'POST',
             success: function(data) {
                 console.log('Player marked as ready:', data);
@@ -663,29 +693,36 @@ $(document).ready(function() {
                 showError('Error marking player as ready: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error'));
             }
         });
+    } catch (error) {
+        console.error('Token error:', error);
+        showError('Failed to retrieve player token');
     }
+}
     
     // Function to strike opponent's board
-    function strikeOpponent(coord, targetOpponent) {
-        if (!gameData || gameData.status !== 'IN_PROGRESS' || gameData.turn !== playerName) {
-            showError('It\'s not your turn to strike!');
-            return;
-        }
-        
-        // Use the provided target opponent or fall back to the first opponent
-        const target = targetOpponent || opponentName;
-        
-        if (!target) {
-            showError('No opponent to strike!');
-            return;
-        }
-        
-        // Parse coordinate to get y and x
-        const y = coord.charAt(0);
-        const x = coord.substring(1);
+function strikeOpponent(coord, targetOpponent) {
+    if (!gameData || gameData.status !== 'IN_PROGRESS' || gameData.turn !== playerName) {
+        showError('It\'s not your turn to strike!');
+        return;
+    }
+    
+    // Use the provided target opponent or fall back to the first opponent
+    const target = targetOpponent || opponentName;
+    
+    if (!target) {
+        showError('No opponent to strike!');
+        return;
+    }
+    
+    // Parse coordinate to get y and x
+    const y = coord.charAt(0);
+    const x = coord.substring(1);
+    
+    try {
+        const token = getPlayerToken();
         
         $.ajax({
-            url: `/api/games/${gameId}/players/${playerName}/strike?target=${target}&y=${y}&x=${x}`,
+            url: `/api/games/${gameId}/players/${playerName}/strike?token=${token}&target=${target}&y=${y}&x=${x}`,
             type: 'POST',
             success: function(data) {
                 console.log('Strike result:', data);
@@ -704,7 +741,11 @@ $(document).ready(function() {
                 showError('Error striking opponent: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error'));
             }
         });
+    } catch (error) {
+        console.error('Token error:', error);
+        showError('Failed to retrieve player token');
     }
+}
     
     // Function to show error message
     function showError(message) {

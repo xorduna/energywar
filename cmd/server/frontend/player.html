@@ -103,5 +103,15 @@
     
     <!-- Import the player.js script file -->
     <script src="assets/js/player.js"></script>
+<script>
+    // Extract token from URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    // Store token in localStorage for use in player.js
+    if (token) {
+        localStorage.setItem('playerToken', token);
+    }
+</script>
 </body>
 </html>
