@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Energy War Game</title>
+    <title>GridStrike.eu</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
@@ -93,13 +93,14 @@
     </style>
 </head>
 <body>
-    <h1>Energy War Game</h1>
+    <h1>GridStrike.eu</h1>
     
     <div class="container">
         <div class="card">
             <h2>Game Description</h2>
-            <p>Energy War is a "battleship" like game but with power plants. Each player sets up power plants (nuclear, gas, wind or solar) to meet the required capacity. Players take turns striking at each other's plants to reduce their opponent's capacity.</p>
+            <p>Grid Strike is a "battleship" like game but with power plants. Each player sets up power plants (nuclear, gas, wind or solar) to meet the required capacity. Players take turns striking at each other's plants to reduce their opponent's capacity.</p>
             <p>The game ends when one of the players has below 10% of the defined capacity.</p>
+            <p>Game is in beta and is updated frequently.</p>
         </div>
         
         <div class="card">
@@ -141,8 +142,8 @@
     
     <h2>How to Play</h2>
     <ol>
-        <li>Create a new game by specifying the board size, capacity, and player names.</li>
-        <li>Each player sets up their board with power plants to meet the required capacity.</li>
+        <li>Click on "New game" and share the game ID with your friends</li>
+        <li>Each player sets up their board with power plants to meet the required capacity (currently 1000 MW).</li>
         <li>Once both players are ready, the game starts automatically.</li>
         <li>Players take turns striking at each other's power plants.</li>
         <li>If a power plant is hit, all of its capacity is removed.</li>
@@ -157,10 +158,12 @@
             <div id="game-id-display"></div>
         </div>
         
+        <!--
         <div class="action-row">
             <input type="text" id="view-game-id" placeholder="Enter Game ID">
             <button id="view-game-btn" class="button">View</button>
         </div>
+        -->
         
         <div class="action-row">
             <input type="text" id="play-game-id" placeholder="Enter Game ID">
@@ -170,6 +173,8 @@
     </div>    
 
     <h2>API Examples</h2>
+    <p>GridStrike is an open game and you are able to program a bot to play with it</p>
+
     
     <h3>Create a Game</h3>
     <pre><code>POST /api/games?size=10&capacity=1000</code></pre>
@@ -210,6 +215,10 @@
         <a href="/swagger/index.html" class="button">View API Documentation</a>
     </div>
     
+    <div style="text-align: center; margin-top: 50px;">
+        
+        <p>Brought to you with 🩷 by <a href="https://www.maulabs.cat">maulabs.cat</a></p>
+    </div>
 
     
     <script>
