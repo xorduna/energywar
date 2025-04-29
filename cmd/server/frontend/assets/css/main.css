@@ -22,6 +22,10 @@ h1 {
     justify-content: center;
 }
 
+.small-icon {
+    height: 25px;
+}
+
 .small-logo {
     height: 100px;
 }
