@@ -1,365 +1,101 @@
+# Energy War Game Documentation
 
-**Description:**
+## Game Concept
 
-This document describes a "battleship" like game but with power plants. Each user has to setup its power plants (nuclear, gas, wind or solar) to meet the required capacity. Players take turns striking at each other's power plants to reduce their opponent's capacity. If a plant is hit, all the capacity is removed.
+Energy War is a strategic multiplayer game where players compete by managing power plants and striking opponent's energy infrastructure.
 
-The game supports multiple players, with each player having their own board and taking turns in alphabetical order.
+## Core Mechanics
 
-Board 
+### Power Plants
+- 4 Types of Power Plants:
+  1. Nuclear (1000 MW, 3x3 grid)
+  2. Gas (300 MW, 2x2 grid)
+  3. Wind (100 MW, 2x1 grid)
+  4. Solar (25 MW, 1x1 grid)
 
-- Letters for Y axis, and Number for X axis.
+### Game Phases
+1. **Game Creation**
+   - Create game via index.html
+   - Choose public or private game
+   - Get shareable game link
+   - Copy link to clipboard
 
-| Power plant | Code | Capacity | size  |
-| ----------- | ---- | -------- | ----- |
-| NUCLEAR     | N    | 1000     | 3 x 3 |
-| GAS         | G    | 300      | 2 x 2 |
-| WIND        | W    | 100      | 2 x 1 |
-| SOLAR       | S    | 25       | 1 x 1 |
-Other
+2. **Game Joining**
+   - Use join.html page
+   - Enter game ID and player name
+   - Receive unique authentication token
 
-| Code | Description |
-| ---- | ----------- |
-| -    | Land        |
-| H    | Hit         |
-| M    | Miss        |
-| ?    | Unknown     |
-|      |             |
+3. **Board Setup**
+   - Players place power plants
+   - Meet minimum capacity requirement (1000 MW)
+   - Strategic plant placement
+   - Validate board configuration
 
-Mechanics:
-- User should build an energy infrastructure that meets at least the capacity defined in the game and max a 10% extra of the capacity
-- If a power plant is HIT, capacity of the entire plant is removed from the counter
-- The game ends when one of the players have below the 10% of the defined capacity
+4. **Gameplay**
+   - Turn-based strikes
+   - Target opponent's power plants
+   - Remove plant capacity when hit
+   - Game ends when a player's capacity falls below 10%
 
-Example Board
+## Authentication and Security
 
-```json
-{
-  "plants": [
-    {
-      "type": "NUCLEAR",
-      "coordinates": ["A1", "A2", "A3", "B1", "B2", "B3"]
-    },
-    {
-      "type": "GAS",
-      "coordinates": ["C1", "C2", "D1", "D2"]
-    },
-    {
-      "type": "WIND",
-      "coordinates": ["E1", "E2"]
-    },
-    {
-      "type": "SOLAR",
-      "coordinates": ["F1"]
-    },
-  ],
-  "hits": ["F1"],
-  "misses": ["G1", "G2"],
-  "total_capacity": 1425,
-  "capacity": 1400
-}
-```
+### Token-Based Authentication
+- Unique token generated for each player
+- Required for sensitive actions:
+  * Setting board
+  * Marking ready
+  * Performing strikes
+- Prevents unauthorized game manipulation
 
+### Game Visibility
+- Public games: Open to all
+- Private games: Invite-only via shared link
 
-**Status mechanics:**
+## Frontend Components
 
-`PENDING` -> `IN_PROGRESS` -> `END`
-(turn is handled by the `turn` field)
+### index.html
+- Game creation interface
+- Public/private game selection
+- Shareable game link generation
+- Clipboard copy functionality
 
-When a game starts, each player should post their initial board. They can update the board as many times as they want and once they are ready to play, the call `POST /games/:id/players/:name/ready`
+### join.html
+- Dedicated game joining page
+- Supports URL-based joining
+- Manual game ID and player name entry
+- Input validation
 
-Once both player have declared themselves ready, the game starts automatically until one of the two player wins.
+### player.html
+- Game board setup and interaction
+- Real-time game state management
+- Token-based authentication
 
-**POST /games?size=10&capacity=1000**
+## Technical Details
 
-- Starts a game
-- Supports multiple players
-- Initial status is pending
-- Size should be between 5 and 20
-- There is no limit for capacity but should be > 0
-- turn is for the first player in alphabetical order
+### Board Validation Rules
+- Plants must fit within grid
+- No overlapping plants
+- Minimum total capacity requirement
+- Maximum capacity limit
 
-Response
-```json
-{
-"id": "<id>",
-"status": "PENDING",
-"turn": "alice",
-"winner": null,
-"players": {
-	"alice": {"ready": false, "total_capacity": 0, "capacity": 0},
-	"bob": {"ready": false, "total_capacity": 0, "capacity": 0}
-	}
-}
-```
+### Striking Mechanics
+- One strike per turn
+- Hits remove entire plant's capacity
+- Misses end turn
+- Game state updates in real-time
 
-Error Response
-```json
-{
-"status": "ERROR",
-"error": "INVALID_PARAMETERS"
-}
-```
+## Winning Conditions
+- Reduce opponent's total capacity below 10%
+- Strategic plant placement
+- Efficient striking
 
+## Future Enhancements
+- Spectator mode
+- Advanced matchmaking
+- Persistent game storage
+- Detailed game analytics
 
-**GET /games/:id**
-- Gets the status of the game
-Response example 1
-```json
-{
-"id": "<id>",
-"status": "PENDING",
-"winner": null,
-"players": {
-	"alice": {"ready": false, "total_capacity": 0, "capacity": 0},
-	"bob": {"ready": true, "total_capacity": 1000, "capacity": 1000}
-	}
-}
-```
-
-Response example 2
-```json
-{
-"id": "<id>",
-"status": "IN_PROGRESS",
-"turn": "bob",
-"winner": null,
-"players": {
-	"alice": {"ready": true, "total_capacity": 1000, "capacity": 700},
-	"bob": {"ready": true, "total_capacity": 1000, "capacity": 800}
-	}
-}
-```
-
-Response example 3
-```json
-{
-"id": "<id>",
-"status": "END",
-"turn": "alice",
-"winner": "alice",
-"players": {
-	"alice": {"ready": true, "total_capacity": 1000, "capacity": 500},
-	"bob": {"ready": true, "total_capacity": 1000, "capacity": 0}
-	}
-}
-```
-
-Status descriptions
-
-| `game.status` | `winner`  | Description         |
-| ------------- | --------- | ------------------- |
-| `PENDING`     | `null`    | Incomplete setup    |
-| `IN_PROGRESS` | `null`    | Game is in progress |
-| `END`         | `"alice"` | Alice won           |
-| `END`         | `"bob"`   | Bob won             |
-The initial value of `turn` is the first alphabetically ordered player name
-
-At the moment the game ends, the `turn` field still points to the player who performed the winning move (i.e., the winner).
-
-**POST /games/:id/players/:name/ready**
-- Sets the board set to true for this player
-- To call this endpoint the game should be in `PENDING` and the capacity of the board should meet the expectations
-- Once all players are ready, game starts and turn is for the first player in alphabetical order
-- Clients should poll the endpoint /games/:id to know if they can strike
-
-Response
-```json
-{"result": "OK"}
-```
-
-Error Response
-```json
-{
-"status": "ERROR",
-"error": "<error message>"
-}
-```
-
-Possible errors:
-- `GAME_ALREADY_STARTED`
-- `BOARD_NOT_SET`
-
-
-**POST /games/:id/players/:name/strike?target=target&y=A&x=1**
-- player with name strikes player target
-- After strike, game advances and turn is for next player
-- Users can get the board to know the overal situation
-- Check if name and target exist, otherwise return `INVALID_PLAYER`
-
-Response
-```json
-{
-"status": "OK",
-"result": "HIT"
-}
-```
-
-Possible values or result:
-- `HIT`
-- `MISS`
-
-Error Response
-```json
-{
-"status": "ERROR",
-"error": "NOT_YOUR_TURN"
-}
-```
-
-Possible error values
-- `NOT_YOUR_TURN`
-- `INVALID_COORDINATES`
-- `INVALID_PLAYER`
-
-
-**POST /games/:id/players/:name/board**
-- Sets up board for player
-- Two power plants cannot occupy the same coordinates
-- Check rule capacities
-- This endpoint should only be called while the status game is `PENDING`
-
-Body:
-```json
-{
-  "plants": [
-    {
-      "type": "NUCLEAR",
-      "coordinates": ["A1", "A2", "A3", "B1", "B2", "B3"]
-    },
-    {
-      "type": "GAS",
-      "coordinates": ["C1", "C2", "D1", "D2"]
-    },
-    {
-      "type": "WIND",
-      "coordinates": ["E1", "E2"]
-    },
-    {
-      "type": "SOLAR",
-      "coordinates": ["F1"]
-    },
-  ],
-}
-```
-
-Response
-```json
-{
-  "plants": [
-    {
-      "type": "NUCLEAR",
-      "coordinates": ["A1", "A2", "A3", "B1", "B2", "B3"]
-    },
-    {
-      "type": "GAS",
-      "coordinates": ["C1", "C2", "D1", "D2"]
-    },
-    {
-      "type": "WIND",
-      "coordinates": ["E1", "E2"]
-    },
-    {
-      "type": "SOLAR",
-      "coordinates": ["F1"]
-    },
-  ],
-  "hits": ["F1"],
-  "misses": ["G1", "G2"],
-  "total_capacity": 1425,
-  "capacity": 1400
-}
-```
-
-Error response
-```json
-{
-"status": "ERROR",
-"error": "<error message>"
-}
-```
-
-Possible errors:
-- `OVERLAPPING_PLANTS`
-- `INVALID_COORDINATES`
-- `GAME_ALREADY_STARTED`
-
-**GET /games/:id/players/:name/board**
-- Get current user board
-- Will require authentication eventually so it can only be requested by the user
-
-Response
-```json
-{
-  "plants": [
-    {
-      "type": "NUCLEAR",
-      "coordinates": ["A1", "A2", "A3", "B1", "B2", "B3"]
-    },
-    {
-      "type": "GAS",
-      "coordinates": ["C1", "C2", "D1", "D2"]
-    },
-    {
-      "type": "WIND",
-      "coordinates": ["E1", "E2"]
-    },
-    {
-      "type": "SOLAR",
-      "coordinates": ["F1"]
-    },
-  ],
-  "hits": ["F1"],
-  "misses": ["G1", "G2"],
-  "total_capacity": 1425,
-  "capacity": 1400
-}
-```
-
-
-**GET /games/:id/opponent/:name/board/map**
-- Gets an ASCII representation of a players map
-Response
-```
-   1 2 3 4 5 6 7 8 9 10
-A  N N N . . . . . . .
-B  N N N . . . . . . .
-C  N N N . . . . . . .
-D  . . . . . . . . . .
-E  . . . . . . . . . .
-F  . . . . . . . . . .
-G  . . . . . . . . . .
-H  . . . . . . . . . .
-I  . . . . . . . . . .
-J  . . . . . . . . . .
-
-```
-
-**GET /games/:id/opponent/:name/board**
-- Gets a blind board (only hits and misses) for a player
-- This endpoint is public
-Response
-```json
-{
-  "hits": ["B2"],
-  "misses": ["A1", "C1"],
-  "total_capacity": 1000,
-  "capacity": 900,
-}
-```
-
-**GET /games/:id/opponent/:name/board/map**
-- Gets an ASCII representation of a blind map (only hits and misses for a player)
-- This endpoint is public
-Response
-```
-   1 2 3 4 5 6 7 8 9 10
-A  M . . . . . . . . .
-B  . H . . . . . . . .
-C  M . . . . . . . . .
-D  . . . . . . . . . .
-E  . . . . . . . . . .
-F  . . . . . . . . . .
-G  . . . . . . . . . .
-H  . . . . . . . . . .
-I  . . . . . . . . . .
-J  . . . . . . . . . .
+## Community and Feedback
+- Open-source development
+- Regular updates
+- User-driven improvements

@@ -1,179 +1,96 @@
-# Energy War Game API Implementation Process
+# Energy War Game Development Process
 
-## Overview
+## Game Creation Workflow
 
-This document describes the implementation process of the Energy War Game API, a "battleship" like game but with power plants. The implementation follows the requirements specified in the energy-war-game.md file.
+1. **Game Initialization**
+   - User navigates to index.html
+   - Selects game visibility (public/private)
+   - Clicks "New Game" button
+   - Backend generates unique game ID
+   - Frontend displays game details and shareable link
 
-## Implementation Steps
+2. **Game Sharing**
+   - Automatically generates join game URL
+   - Provides clipboard copy functionality
+   - URL includes game ID as query parameter
+   - Supports easy game invitation
 
-### 1. Project Setup
+3. **Game Joining**
+   - Dedicated join.html page
+   - Supports two joining methods:
+     a. Direct URL with pre-filled game ID
+     b. Manual game ID and player name entry
+   - Validates input before joining
+   - Retrieves authentication token
 
-- Created a Go module for the project
-```bash
-go mod init github.com/xorduna/energywar
-```
+## Authentication Process
 
-- Installed required dependencies
-```bash
-go get github.com/labstack/echo/v4
-go get github.com/swaggo/echo-swagger
-go get github.com/swaggo/swag/cmd/swag
-```
+1. **Token Generation**
+   - Tokens created uniquely for each player when joining a game
+   - Tokens are random, secure strings
+   - Stored server-side with player information
 
-- Created the project directory structure
-```bash
-mkdir -p cmd/server pkg/models pkg/handlers pkg/game frontend docs
-```
+2. **Token Validation**
+   - Required for sensitive game actions:
+     * Setting board configuration
+     * Marking player as ready
+     * Performing strikes
+     * Accessing board information
+   - Validated on each protected API endpoint
+   - Prevents unauthorized game manipulation
 
-### 2. Data Models Implementation
+## Security Considerations
 
-Created the data models in `pkg/models/models.go`:
-- Defined power plant types (NUCLEAR, GAS, WIND, SOLAR)
-- Defined game status types (PENDING, IN_PROGRESS, END)
-- Implemented board and game structures
-- Added utility functions for coordinate parsing and validation
-- Implemented board visualization functions
+1. **Endpoint Protection**
+   - Token-based authentication
+   - 403 Forbidden response for invalid/missing tokens
+   - Prevents unauthorized access to game-specific actions
 
-### 3. Game Logic Implementation
+2. **Game State Management**
+   - Tokens tied to specific game and player
+   - Tokens not reusable across different games
+   - Tokens expire with game completion
 
-Created the game logic in `pkg/game/game.go`:
-- Implemented the `GameManager` to manage all active games
-- Added functions for creating games, setting up boards, and handling player actions
-- Implemented strike mechanics and win condition checking
-- Added validation for board setup and plant placement
-- Implemented turn management
+## Frontend Flow
 
-### 4. API Handlers Implementation
+1. **index.html**
+   - Game creation interface
+   - Public/private game selection
+   - Generates shareable game link
+   - Clipboard copy functionality
 
-Created the API handlers in `pkg/handlers/handlers.go`:
-- Implemented all required endpoints as specified in the requirements
-- Added Swagger annotations for API documentation
-- Implemented request validation and error handling
-- Added JSON response formatting
+2. **join.html**
+   - Dedicated game joining page
+   - Supports URL-based and manual game joining
+   - Input validation
+   - API interaction for game join
 
-### 5. Frontend Implementation
+3. **player.html**
+   - Game board setup
+   - Player interactions
+   - Real-time game state management
+   - Token-based authentication
 
-Created a simple frontend in `frontend/index.html`:
-- Added game description and rules
-- Included power plant information
-- Added API usage examples
-- Provided a link to the Swagger documentation
+## Development Best Practices
 
-Enhanced the frontend with interactive game features:
-- Added a "New Game" button that creates a new game and displays the game ID
-- Added a game viewing feature with an input field for game ID and a "View" button
-- Added a play game section with input fields for game ID and player name
-- Created a game.html page to display the game status and boards
-- Implemented board visualization with power plant icons
-- Added color coding for hits (red), misses (orange), and normal cells (green)
-- Added visual indicators for working (green border) and damaged (red border) power plants
-- Implemented automatic polling to update game status and boards every second
-- Added error handling for API requests and null checks for board properties
+1. **Modular Design**
+   - Separate concerns between frontend and backend
+   - Clear API contract
+   - Extensible architecture
 
-Refactored the frontend for better maintainability:
-- Organized frontend assets into a structured directory:
-  ```
-  frontend/assets/
-  ├── css/        # Stylesheets
-  ├── js/         # JavaScript files
-  └── img/        # Image resources
-  ```
-- Separated concerns in the player.html page:
-  - Moved JavaScript code to external file (player.js)
-  - Moved CSS styles to external file (player.css)
-  - Kept HTML structure clean and focused
-- Improved code organization and maintainability
-- Made the codebase more modular and easier to extend
+2. **Security First**
+   - Token-based authentication
+   - Input validation
+   - Minimal information exposure
 
-### 6. Server Implementation
+3. **User Experience**
+   - Simple game creation and joining
+   - Easy game sharing
+   - Intuitive interfaces
 
-Created the server in `cmd/server/main.go`:
-- Set up the Echo framework
-- Registered all API routes
-- Configured middleware (logging, CORS, etc.)
-- Embedded frontend files
-- Added Swagger documentation setup
+## Continuous Improvement
 
-### 7. Build System
-
-Created a Makefile with the following targets:
-- `build`: Builds the binary and generates Swagger documentation
-- `run`: Builds and runs the application
-- `swagger`: Generates Swagger documentation
-- `clean`: Cleans build artifacts
-- `test`: Runs tests
-- `deps`: Installs dependencies
-
-## API Endpoints
-
-The following API endpoints were implemented:
-
-- `POST /api/games`: Create a new game
-- `GET /api/games/:id`: Get game status
-- `GET /api/games/:id/status`: Get limited game status
-- `POST /api/games/:id/players/:name/ready`: Set player as ready
-- `POST /api/games/:id/players/:name/strike`: Strike a coordinate
-- `POST /api/games/:id/players/:name/board`: Set player board
-- `GET /api/games/:id/players/:name/board`: Get player board
-- `GET /api/games/:id/players/:name/board/map`: Get ASCII representation of player board
-- `GET /api/games/:id/opponent/:name/board`: Get opponent blind board
-- `GET /api/games/:id/opponent/:name/board/map`: Get ASCII representation of opponent blind board
-
-## Final Result
-
-The Energy War Game API is running at http://localhost:8080 with API endpoints under the `/api` path. The frontend is served from the root path `/` and the Swagger documentation is available at http://localhost:8080/swagger/index.html.
-
-The implementation successfully meets all the requirements:
-- Backend in Go latest version
-- Using the Echo framework
-- Swagger documentation provided
-- Makefile for building binary and documentation
-- Frontend files embedded in the binary
-
-The game mechanics are fully implemented according to the specifications, including:
-- Power plant setup with different types, capacities, and sizes
-- Turn-based gameplay
-- Strike mechanics
-- Win condition checking
-- Multiplayer support
-
-## Multiplayer Support
-
-The game now supports multiple players with the following features:
-
-1. **Player Management**
-   - Players can join a game using a unique name
-   - Each player has their own board and capacity
-
-2. **Turn-Based Gameplay**
-   - Players take turns in alphabetical order
-   - Only the player whose turn it is can strike
-
-3. **Opponent Boards**
-   - Players can see blind versions of all opponent boards
-   - Hits and misses are visible, but plant locations are hidden
-
-4. **Frontend Enhancements**
-   - The game view page shows boards for all players
-   - The player page shows all opponent boards
-   - Players can strike any opponent's board when it's their turn
-
-## Recent Game Logic Improvements
-
-### Multiplayer Turn Management
-- Fixed turn cycling logic to properly handle 2-4 players
-- Implemented modulo-based turn progression ensuring all players get their turn
-- Prevents single player from starting the game prematurely
-
-### Player Limit and Game Start
-- Added a maximum player limit of 4 players per game
-- Prevents more than 4 players from joining a single game
-- Requires at least 2 players to be ready before game can start
-
-### Game Visibility and Security Enhancements
-- Added support for public and private game modes
-- Implemented token hiding in game status and game information endpoints
-- Created a new `/games/:id/status` endpoint for consistent limited game information
-- Ensured sensitive information like player tokens is never exposed
-- Added a dropdown in the frontend to select game visibility during creation
-- Implemented consistent game information retrieval for both public and private games
+- Regular security audits
+- Performance optimization
+- User feedback integration
+- Feature enhancements

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Grid Strike Game</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: 50px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Join Energy War Game</h1>
+        
+        <div id="game-input">
+            <input type="text" id="game-id-input" placeholder="Enter Game ID" required>
+            <input type="text" id="player-name-input" placeholder="Enter Your Name" required>
+            <button class="button" onclick="joinGame()">Join Game</button>
+            <div id="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get game ID from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameId = urlParams.get('game');
+
+        // If game ID is provided in URL, pre-fill the input
+        if (gameId) {
+            document.getElementById('game-id-input').value = gameId;
+        }
+
+        function joinGame() {
+            const gameId = document.getElementById('game-id-input').value.trim();
+            const playerName = document.getElementById('player-name-input').value.trim();
+            const errorMessage = document.getElementById('error-message');
+
+            // Validate inputs
+            if (!gameId) {
+                errorMessage.textContent = 'Please enter a Game ID';
+                return;
+            }
+            if (!playerName) {
+                errorMessage.textContent = 'Please enter a Player Name';
+                return;
+            }
+
+            // Clear any previous error messages
+            errorMessage.textContent = '';
+
+            // Join the game via API
+            $.ajax({
+                url: `/api/games/${gameId}/join?player=${playerName}`,
+                type: 'POST',
+                success: function(response) {
+                    // Redirect to player page with game ID, player name, and token
+                    window.location.href = `player.html?id=${gameId}&player=${playerName}&token=${response.token}`;
+                },
+                error: function(xhr) {
+                    // Display error message from server
+                    const errorText = xhr.responseJSON && xhr.responseJSON.error 
+                        ? xhr.responseJSON.error 
+                        : 'Failed to join game';
+                    errorMessage.textContent = errorText;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

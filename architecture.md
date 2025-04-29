@@ -46,6 +46,15 @@ The Energy War Game is a multiplayer, turn-based strategy game implemented as a 
 
 ## Security Features
 
+### Token-Based Authentication
+- Secure endpoints with player-specific tokens
+- Tokens generated upon game join
+- Token required for sensitive actions:
+  - Setting board
+  - Marking player ready
+  - Performing strikes
+  - Accessing board information
+
 ### Game Visibility
 - Support for public and private game modes
 - Configurable game visibility during game creation
@@ -55,6 +64,39 @@ The Energy War Game is a multiplayer, turn-based strategy game implemented as a 
 - Player tokens are never exposed in game status endpoints
 - Tokens only returned during game join process
 - Consistent token hiding across all game information retrieval
+
+## Frontend Architecture
+
+### Pages
+1. **index.html**
+   - Game creation
+   - Game joining
+   - Game information display
+   - Dynamic game link generation and sharing
+
+2. **join.html**
+   - Dedicated page for joining games
+   - Supports pre-filled game ID from URL
+   - Validates player input
+   - Handles game join process
+
+3. **player.html**
+   - Game board setup
+   - Player interactions
+   - Real-time game state management
+
+### Technologies
+- HTML5
+- CSS3
+- JavaScript (jQuery)
+- Responsive design
+
+### Key Features
+- Interactive game creation
+- Real-time game status updates
+- Board visualization
+- Player action management
+- Secure token-based authentication
 
 ## Game Mechanics
 
@@ -69,20 +111,6 @@ The Energy War Game is a multiplayer, turn-based strategy game implemented as a 
 - Unique capacities and board sizes
 - Strategic plant placement
 - Capacity-based win conditions
-
-## Frontend Architecture
-
-### Technologies
-- HTML5
-- CSS3
-- JavaScript (jQuery)
-- Responsive design
-
-### Key Features
-- Interactive game creation
-- Real-time game status updates
-- Board visualization
-- Player action management
 
 ## Security Principles
 
