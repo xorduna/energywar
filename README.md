@@ -1,4 +1,4 @@
-# Energy War Game
+# GridStrike Game
 
 A "battleship" like game but with power plants. Each user has to setup its power plants (nuclear, gas, wind or solar) to meet the required capacity. Players take turns striking to reduce their opponent's capacity. If a plant is hit, all the capacity is removed.
 
