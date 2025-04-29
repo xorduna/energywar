@@ -5,92 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GridStrike.eu</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 30px;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .card {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            flex: 1;
-            min-width: 300px;
-        }
-        pre {
-            background-color: #f1f1f1;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-        code {
-            font-family: monospace;
-        }
-        .api-link {
-            display: block;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .button {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #2980b9;
-        }
-        .game-actions {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-top: 30px;
-        }
-        .action-row {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-        .action-row input {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-right: 10px;
-            flex: 1;
-        }
-        #game-id-display {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #e8f4fc;
-            border-radius: 5px;
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
     <h1>GridStrike.eu</h1>
@@ -161,13 +76,6 @@
             <button id="new-game-btn" class="button">New Game</button>
             <div id="game-id-display"></div>
         </div>
-        
-        <!--
-        <div class="action-row">
-            <input type="text" id="view-game-id" placeholder="Enter Game ID">
-            <button id="view-game-btn" class="button">View</button>
-        </div>
-        -->
         
         <div class="action-row">
             <input type="text" id="play-game-id" placeholder="Enter Game ID">
@@ -285,19 +193,6 @@ function copyToClipboard(text) {
     // Optional: Show a brief tooltip or alert
     alert('Game link copied to clipboard!');
 }
-            });
-            
-            // View Game button click handler
-            $('#view-game-btn').click(function() {
-                const gameId = $('#view-game-id').val().trim();
-                
-                if (!gameId) {
-                    alert('Please enter a Game ID');
-                    return;
-                }
-                
-                // Redirect to the game view page
-                window.location.href = `game.html?id=${gameId}`;
             });
             
             // Join Game button click handler

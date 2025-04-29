@@ -10,6 +10,16 @@ body {
 
 h1, h2, h3 {
     color: #2c3e50;
+}
+
+h1 {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+h2 {
+    color: #3498db;
+    margin-top: 30px;
     text-align: center;
 }
 
@@ -41,6 +51,68 @@ h1, h2, h3 {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     min-width: 300px;
     flex: 1;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 300px;
+}
+
+pre {
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+code {
+    font-family: monospace;
+}
+
+.api-link {
+    display: block;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.game-actions {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-top: 30px;
+}
+
+.action-row {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.action-row input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-right: 10px;
+    flex: 1;
+}
+
+#game-id-display {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e8f4fc;
+    border-radius: 5px;
+    display: none;
 }
 
 .grid {
@@ -242,4 +314,31 @@ h1, h2, h3 {
     text-align: center;
     margin: 15px 0;
     display: none;
+}
+
+/* Join page specific styles */
+.join-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 30px;
+    margin-top: 50px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.join-input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#error-message {
+    color: red;
+    margin-top: 10px;
 }
