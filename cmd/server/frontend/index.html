@@ -155,8 +155,8 @@
         
         <div class="action-row">
             <select id="game-public-status">
-                <option value="false">Private Game</option>
                 <option value="true">Public Game</option>
+                <option value="false">Private Game</option>
             </select>
             <button id="new-game-btn" class="button">New Game</button>
             <div id="game-id-display"></div>
@@ -187,7 +187,13 @@
     <pre><code>POST /api/games/:id/join?player=name</code></pre>
     
     <h3>Set Up a Board</h3>
-    <pre><code>POST /api/games/:id/players/:name/board
+    <pre><code>POST /api/games/:id/players/:name/board?token=:token</code></pre>
+    <p>Example response:</p>
+    <pre><code>
+        {"token": "token"}
+    </code></pre>
+
+
 {
   "plants": [
     {
@@ -240,7 +246,7 @@
                     type: 'POST',
                     success: function(response) {
                         // Display the game ID
-                        $('#game-id-display').text(`Game created! Game ID: ${response.id} (${publicStatus === 'true' ? 'Public' : 'Private'})`).show();
+                        $('#game-id-display').html(`Game created! Game ID: ${response.id} (${publicStatus === 'true' ? 'Public' : 'Private'})`).show();
                     },
                     error: function(xhr) {
                         alert('Error creating game: ' + JSON.stringify(xhr.responseJSON));
