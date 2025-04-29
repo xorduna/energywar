@@ -6,6 +6,7 @@
     <title>Grid Strike - Game View</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/main.js"></script>
 </head>
 <body>
     <h1>Grid Strike Game - View</h1>
@@ -34,6 +35,8 @@
         Game not found or an error occurred. Polling has been stopped.
     </div>
     
+    <div class="success-message" id="success-message" style="display: none;"></div>
+    
     <script>
         $(document).ready(function() {
             // Get game ID from URL parameter
@@ -51,167 +54,79 @@
             
             // Variable to track if polling should continue
             let continuePolling = true;
-            let gameVisibility = 'private'; // Default to private
+            let gameVisibility = false; // Default to private
             
-            // Function to create a grid for a player's board
-            function createGrid(containerId, size = 10) {
-                const container = $(`#${containerId}`);
-                container.empty();
-                
-                // Create grid header (column numbers)
-                const gridHeader = $('<div class="grid-header"></div>');
-                gridHeader.append('<div class="grid-header-item"></div>'); // Empty corner cell
-                
-                for (let i = 1; i <= size; i++) {
-                    gridHeader.append(`<div class="grid-header-item">${i}</div>`);
-                }
-                
-                container.append(gridHeader);
-                
-                // Create grid rows
-                for (let row = 0; row < size; row++) {
-                    const gridRow = $('<div class="grid-row"></div>');
-                    
-                    // Row header (letters A-J)
-                    gridRow.append(`<div class="grid-row-header">${String.fromCharCode(65 + row)}</div>`);
-                    
-                    // Cells
-                    for (let col = 0; col < size; col++) {
-                        gridRow.append(`<div class="cell" data-coord="${String.fromCharCode(65 + row)}${col + 1}"></div>`);
-                    }
-                    
-                    container.append(gridRow);
-                }
-            }
-            
-            // Function to update the board display
-            function updateBoard(playerId, playerName, playerData, isPublicGame) {
-                // Update player name and capacity
-                $(`#${playerId}-name`).text(playerName);
-                $(`#${playerId}-capacity`).text(`Capacity: ${playerData.capacity} / ${playerData.total_capacity}`);
-                
-                // Clear all cell classes and images
-                $(`#${playerId}-board .cell`).removeClass('hit miss normal plant-container plant-working plant-damaged').empty();
-                
-                // Process hits and misses first
-                const boardData = playerData.board || {};
-                
-                if (boardData.hits) {
-                    boardData.hits.forEach(coord => {
-                        const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
-                        if (cell.length) {
-                            cell.removeClass('normal').addClass('hit');
-                        }
-                    });
-                }
-                
-                if (boardData.misses) {
-                    boardData.misses.forEach(coord => {
-                        const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
-                        if (cell.length) {
-                            cell.removeClass('normal').addClass('miss');
-                        }
-                    });
-                }
-                
-                // Process plants based on game visibility
-                if (isPublicGame && boardData.plants) {
-                    boardData.plants.forEach(plant => {
-                        const plantType = plant.type.toLowerCase();
-                        const plantCoords = plant.coordinates;
-                        
-                        plantCoords.forEach(coord => {
-                            const cell = $(`#${playerId}-board .cell[data-coord="${coord}"]`);
-                            if (cell.length) {
-                                // Add plant image
-                                cell.html(`<img src="assets/img/${plantType}.png" alt="${plantType}">`);
-                                cell.addClass('plant-container normal');
-                                
-                                // Check if this plant is hit
-                                const isHit = boardData.hits && plantCoords.some(pc => boardData.hits.includes(pc));
-                                
-                                // Add working/damaged status
-                                if (isHit) {
-                                    cell.addClass('plant-damaged');
-                                } else {
-                                    cell.addClass('plant-working');
-                                }
-                            }
-                        });
-                    });
-                }
-            }
-            
-            // Function to create a board container for a player
-            function createBoardContainer(playerName, index) {
-                const boardId = `player${index}-board`;
-                const boardContainer = $(`
-                    <div class="board">
-                        <h3 id="player${index}-name">${playerName}</h3>
-                        <p id="player${index}-capacity">Capacity: 0 / 0</p>
-                        <div id="${boardId}"></div>
-                    </div>
-                `);
-                
-                return { boardContainer, boardId };
-            }
-            
-            // Function to fetch game data and update the UI
-            function updateGameData() {
+            // Function to update game data and boards
+            async function updateGameData() {
                 if (!continuePolling) return;
                 
-                $.ajax({
-                    url: `/api/games/${gameId}`,
-                    type: 'GET',
-                    success: function(gameData) {
-                        // Update game visibility
-                        gameVisibility = gameData.visibility || 'private';
+                try {
+                    const gameData = await $.ajax({
+                        url: `/api/games/${gameId}`,
+                        type: 'GET'
+                    });
+                    
+                    console.log('Game data:', gameData);
+                    
+                    // Update game visibility
+                    gameVisibility = gameData.visibility || false;
+                    console.log('Game visibility:', gameVisibility);
+                    
+                    // Update game status information
+                    $('#game-status').text(`Status: ${gameData.status}`);
+                    $('#game-turn').text(`Turn: ${gameData.turn || 'N/A'}`);
+                    $('#game-winner').text(`Winner: ${gameData.winner || 'None'}`);
+                    
+                    // Get player names
+                    const playerNames = Object.keys(gameData.players);
+                    
+                    // Update players list
+                    const playersList = $('#players');
+                    playersList.empty();
+                    
+                    playerNames.forEach(playerName => {
+                        const playerInfo = gameData.players[playerName];
+                        const readyStatus = playerInfo.ready ? 'Ready' : 'Not Ready';
+                        playersList.append(`<li>${playerName} - ${readyStatus} (Capacity: ${playerInfo.capacity}/${playerInfo.total_capacity})</li>`);
+                    });
+                    
+                    // Update board displays
+                    if (playerNames.length > 0) {
+                        // Clear the boards container
+                        const boardsContainer = $('#boards-container');
+                        boardsContainer.empty();
                         
-                        // Update game status information
-                        $('#game-status').text(`Status: ${gameData.status}`);
-                        $('#game-turn').text(`Turn: ${gameData.turn || 'N/A'}`);
-                        $('#game-winner').text(`Winner: ${gameData.winner || 'None'}`);
-                        
-                        // Get player names
-                        const playerNames = Object.keys(gameData.players);
-                        
-                        // Update players list
-                        const playersList = $('#players');
-                        playersList.empty();
-                        
-                        playerNames.forEach(playerName => {
-                            const playerInfo = gameData.players[playerName];
-                            const readyStatus = playerInfo.ready ? 'Ready' : 'Not Ready';
-                            playersList.append(`<li>${playerName} - ${readyStatus} (Capacity: ${playerInfo.capacity}/${playerInfo.total_capacity})</li>`);
-                        });
-                        
-                        // Update board displays
-                        if (playerNames.length > 0) {
-                            // Clear the boards container
-                            const boardsContainer = $('#boards-container');
-                            boardsContainer.empty();
+                        // Create a board for each player
+                        for (let i = 0; i < playerNames.length; i++) {
+                            const playerName = playerNames[i];
+                            const boardId = `player${i + 1}-board`;
                             
-                            // Create a board for each player
-                            playerNames.forEach((playerName, index) => {
-                                const { boardContainer, boardId } = createBoardContainer(playerName, index + 1);
-                                boardsContainer.append(boardContainer);
-                                
-                                // Create the grid for this board
-                                createGrid(boardId);
-                                
-                                // Update the board display
-                                const playerData = gameData.players[playerName];
-                                updateBoard(boardId.split('-')[0], playerName, playerData, gameVisibility === 'public');
-                            });
+                            // Create and append board container
+                            const boardContainer = createBoardContainer(boardId, playerName);
+                            boardsContainer.append(boardContainer);
+                            
+                            // Create the grid
+                            createGrid(boardId);
+                            
+                            try {
+                                // If game is public, use the board data from game status
+                                if (gameVisibility && gameData.players[playerName].board) {
+                                    updateBoard(boardId, playerName, gameData.players[playerName].board, true);
+                                } else {
+                                    // For private games, fetch opponent board data
+                                    const boardData = await fetchBoardData(gameId, playerName, false);
+                                    updateBoard(boardId, playerName, boardData, false);
+                                }
+                            } catch (error) {
+                                console.error(`Error updating board for ${playerName}:`, error);
+                            }
                         }
-                    },
-                    error: function(xhr) {
-                        console.error('Error fetching game data:', xhr);
-                        // Show error message and stop polling
-                        $('#error-message').show();
-                        continuePolling = false;
                     }
-                });
+                } catch (error) {
+                    console.error('Error fetching game data:', error);
+                    showError('Error fetching game data. Please try again.');
+                    continuePolling = false;
+                }
             }
             
             // Initial update
