@@ -58,7 +58,7 @@ type Game struct {
 	Players  map[string]PlayerInfo `json:"players"`
 	Size     int                   `json:"-"`
 	Capacity int                   `json:"-"`
-	Public   bool                  `json:"-"`
+	Public   bool                  `json:"visibility"`
 }
 
 // PlantCapacity returns the capacity of a plant type

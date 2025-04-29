@@ -651,6 +651,9 @@ const docTemplate = `{
                 "turn": {
                     "type": "string"
                 },
+                "visibility": {
+                    "type": "boolean"
+                },
                 "winner": {
                     "type": "string"
                 }

@@ -184,14 +184,22 @@ func (h *Handler) GetGame(c echo.Context) error {
 		Status: gameObj.Status,
 		Turn:   gameObj.Turn,
 		Winner: gameObj.Winner,
+		Public: gameObj.Public,
 		Players: func() map[string]models.PlayerInfo {
 			limitedPlayers := make(map[string]models.PlayerInfo)
 			for name, player := range gameObj.Players {
-				limitedPlayers[name] = models.PlayerInfo{
+				playerInfo := models.PlayerInfo{
 					Ready:         player.Ready,
 					TotalCapacity: player.TotalCapacity,
 					Capacity:      player.Capacity,
 				}
+
+				// If the game is public, include the board
+				if gameObj.Public {
+					playerInfo.Board = player.Board
+				}
+
+				limitedPlayers[name] = playerInfo
 			}
 			return limitedPlayers
 		}(),
@@ -547,6 +555,7 @@ func (h *Handler) GetGameStatus(c echo.Context) error {
 		Status: gameObj.Status,
 		Turn:   gameObj.Turn,
 		Winner: gameObj.Winner,
+		Public: gameObj.Public,
 		Players: func() map[string]models.PlayerInfo {
 			limitedPlayers := make(map[string]models.PlayerInfo)
 			for name, player := range gameObj.Players {

@@ -43,7 +43,7 @@
                     <td>WIND</td>
                     <td>W</td>
                     <td>100</td>
-                    <td>2 x 1</td>
+                    <td>2 x 1 (horizontal)</td>
                 </tr>
                 <tr>
                     <td>SOLAR</td>
@@ -159,7 +159,6 @@ $.ajax({
         // Display the game ID with join link and copy button
         const gameIdDisplay = `
             Game created! Game ID: ${response.id} (${publicStatus === 'true' ? 'Public' : 'Private'})
-            <br>
             <a href="${joinGameUrl}" target="_blank">${joinGameUrl}</a>
             <button onclick="copyToClipboard('${joinGameUrl}')" style="background:none; border:none; cursor:pointer;">
                 📋
