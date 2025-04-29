@@ -82,6 +82,13 @@
             <input type="text" id="player-name" placeholder="Enter Player Name">
             <button id="play-game-btn" class="button">Join</button>
         </div>
+
+        <div class="action-row">
+            <input type="text" id="view-game-id" placeholder="Enter Game ID">
+            <button id="view-game-btn" class="button">View</button>
+        </div>
+
+
     </div>    
 
     <h2>API Examples</h2>
@@ -139,85 +146,100 @@
 
     
     <script>
-        $(document).ready(function() {
-            // New Game button click handler
-            $('#new-game-btn').click(function() {
-                // Default values for a new game
-                const size = 10;
-                const capacity = 1000;
-                const publicStatus = $('#game-public-status').val();
-                
-                // Create a new game via API
-$.ajax({
-    url: `/api/games?size=${size}&capacity=${capacity}&public=${publicStatus}`,
-    type: 'POST',
-    success: function(response) {
-        // Construct join game URL
-        const baseUrl = window.location.origin;
-        const joinGameUrl = `${baseUrl}/join.html?game=${response.id}`;
+            $(document).ready(function () {
+                // New Game button click handler
+                $('#new-game-btn').click(function () {
+                    // Default values for a new game
+                    const size = 10;
+                    const capacity = 1000;
+                    const publicStatus = $('#game-public-status').val();
 
-        // Display the game ID with join link and copy button
-        const gameIdDisplay = `
-            Game created! Game ID: ${response.id} (${publicStatus === 'true' ? 'Public' : 'Private'})
-            <a href="${joinGameUrl}" target="_blank">${joinGameUrl}</a>
-            <button onclick="copyToClipboard('${joinGameUrl}')" style="background:none; border:none; cursor:pointer;">
-                📋
-            </button>
-        `;
-        
-        $('#game-id-display').html(gameIdDisplay).show();
-    },
-    error: function(xhr) {
-        alert('Error creating game: ' + JSON.stringify(xhr.responseJSON));
-    }
-});
+                    // Create a new game via API
+                    $.ajax({
+                        url: `/api/games?size=${size}&capacity=${capacity}&public=${publicStatus}`,
+                        type: 'POST',
+                        success: function (response) {
+                            // Construct join game URL
+                            const baseUrl = window.location.origin;
+                            const joinGameUrl = `${baseUrl}/join.html?id=${response.id}`;
 
-// Function to copy text to clipboard
-function copyToClipboard(text) {
-    // Create a temporary textarea element
-    const tempInput = document.createElement('textarea');
-    tempInput.value = text;
-    document.body.appendChild(tempInput);
-    
-    // Select the text
-    tempInput.select();
-    tempInput.setSelectionRange(0, 99999); // For mobile devices
-    
-    // Copy the text
-    document.execCommand('copy');
-    
-    // Remove the temporary element
-    document.body.removeChild(tempInput);
-    
-    // Optional: Show a brief tooltip or alert
-    alert('Game link copied to clipboard!');
-}
-            });
-            
-            // Join Game button click handler
-            $('#play-game-btn').click(function() {
-                const gameId = $('#play-game-id').val().trim();
-                const playerName = $('#player-name').val().trim();
-                
-                if (!gameId || !playerName) {
-                    alert('Please enter both Game ID and Player Name');
-                    return;
-                }
-                
-                // Join the game via API
-                $.ajax({
-                    url: `/api/games/${gameId}/join?player=${playerName}`,
-                    type: 'POST',
-                    success: function(response) {
-                        // Redirect to the player page with game ID, player name, and token as query parameters
-                        window.location.href = `player.html?id=${gameId}&player=${playerName}&token=${response.token}`;
-                    },
-                    error: function(xhr) {
-                        alert('Error joining game: ' + JSON.stringify(xhr.responseJSON));
+                            // Display the game ID with join link and copy button
+                            const gameIdDisplay = `
+                                Game created! Game ID: ${response.id} (${publicStatus === 'true' ? 'Public' : 'Private'})
+                                <a href="${joinGameUrl}" target="_blank">${joinGameUrl}</a>
+                                <button onclick="copyToClipboard('${joinGameUrl}')" style="background:none; border:none; cursor:pointer;">
+                                    📋
+                                </button>`;
+
+                            $('#game-id-display').html(gameIdDisplay).show();
+                        },
+                        error: function (xhr) {
+                            alert('Error creating game: ' + JSON.stringify(xhr.responseJSON));
+                        }
+                    });
+
+                    // Function to copy text to clipboard
+                    function copyToClipboard(text) {
+                        // Create a temporary textarea element
+                        const tempInput = document.createElement('textarea');
+                        tempInput.value = text;
+                        document.body.appendChild(tempInput);
+
+                        // Select the text
+                        tempInput.select();
+                        tempInput.setSelectionRange(0, 99999); // For mobile devices
+
+                        // Copy the text
+                        document.execCommand('copy');
+
+                        // Remove the temporary element
+                        document.body.removeChild(tempInput);
+
+                        // Optional: Show a brief tooltip or alert
+                        alert('Game link copied to clipboard!');
                     }
                 });
+
+                // View Game button click handler
+
+                $('#view-game-btn').click(function () {
+                    const gameId = $('#view-game-id').val().trim();
+                    if (!gameId) {
+
+                        alert('Please enter a Game ID');
+
+                        return;
+
+                    }
+                    // Redirect to the game view page
+                    window.location.href = `game.html?id=${gameId}`;
+
+                });
+
+                // Join Game button click handler
+                $('#play-game-btn').click(function () {
+                    const gameId = $('#play-game-id').val().trim();
+                    const playerName = $('#player-name').val().trim();
+
+                    if (!gameId || !playerName) {
+                        alert('Please enter both Game ID and Player Name');
+                        return;
+                    }
+
+                    // Join the game via API
+                    $.ajax({
+                        url: `/api/games/${gameId}/join?player=${playerName}`,
+                        type: 'POST',
+                        success: function (response) {
+                            // Redirect to the player page with game ID, player name, and token as query parameters
+                            window.location.href = `player.html?id=${gameId}&player=${playerName}&token=${response.token}`;
+                        },
+                        error: function (xhr) {
+                            alert('Error joining game: ' + JSON.stringify(xhr.responseJSON));
+                        }
+                    });
+                });
             });
-        });
     </script>
 </body>
 </html>
