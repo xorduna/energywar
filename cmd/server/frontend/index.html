@@ -185,15 +185,14 @@
     
     <h3>Join a Game</h3>
     <pre><code>POST /api/games/:id/join?player=name</code></pre>
+    <p>Example response:</p>
+    <pre><code>{"token": "your-token"}</code></pre>
+
     
     <h3>Set Up a Board</h3>
     <pre><code>POST /api/games/:id/players/:name/board?token=:token</code></pre>
-    <p>Example response:</p>
+    <p>Example body:</p>
     <pre><code>
-        {"token": "token"}
-    </code></pre>
-
-
 {
   "plants": [
     {
@@ -241,17 +240,51 @@
                 const publicStatus = $('#game-public-status').val();
                 
                 // Create a new game via API
-                $.ajax({
-                    url: `/api/games?size=${size}&capacity=${capacity}&public=${publicStatus}`,
-                    type: 'POST',
-                    success: function(response) {
-                        // Display the game ID
-                        $('#game-id-display').html(`Game created! Game ID: ${response.id} (${publicStatus === 'true' ? 'Public' : 'Private'})`).show();
-                    },
-                    error: function(xhr) {
-                        alert('Error creating game: ' + JSON.stringify(xhr.responseJSON));
-                    }
-                });
+$.ajax({
+    url: `/api/games?size=${size}&capacity=${capacity}&public=${publicStatus}`,
+    type: 'POST',
+    success: function(response) {
+        // Construct join game URL
+        const baseUrl = window.location.origin;
+        const joinGameUrl = `${baseUrl}/join.html?game=${response.id}`;
+
+        // Display the game ID with join link and copy button
+        const gameIdDisplay = `
+            Game created! Game ID: ${response.id} (${publicStatus === 'true' ? 'Public' : 'Private'})
+            <br>
+            <a href="${joinGameUrl}" target="_blank">${joinGameUrl}</a>
+            <button onclick="copyToClipboard('${joinGameUrl}')" style="background:none; border:none; cursor:pointer;">
+                📋
+            </button>
+        `;
+        
+        $('#game-id-display').html(gameIdDisplay).show();
+    },
+    error: function(xhr) {
+        alert('Error creating game: ' + JSON.stringify(xhr.responseJSON));
+    }
+});
+
+// Function to copy text to clipboard
+function copyToClipboard(text) {
+    // Create a temporary textarea element
+    const tempInput = document.createElement('textarea');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    
+    // Select the text
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999); // For mobile devices
+    
+    // Copy the text
+    document.execCommand('copy');
+    
+    // Remove the temporary element
+    document.body.removeChild(tempInput);
+    
+    // Optional: Show a brief tooltip or alert
+    alert('Game link copied to clipboard!');
+}
             });
             
             // View Game button click handler
