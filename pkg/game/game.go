@@ -10,18 +10,21 @@ import (
 	"time"
 
 	"github.com/xorduna/energywar/pkg/models"
+	"gorm.io/gorm"
 )
 
 // GameManager manages all active games
 type GameManager struct {
 	games map[string]*models.Game
 	mutex sync.RWMutex
+	db    *gorm.DB
 }
 
-// NewGameManager creates a new game manager
-func NewGameManager() *GameManager {
+// NewGameManager creates a new game manager with a GORM connection
+func NewGameManager(db *gorm.DB) *GameManager {
 	return &GameManager{
 		games: make(map[string]*models.Game),
+		db:    db,
 	}
 }
 
@@ -53,7 +56,12 @@ func (gm *GameManager) CreateGame(size int, capacity int, public bool) (*models.
 		Public:   public,
 	}
 
-	// Store the game
+	// Store the game in the database
+	if err := gm.db.Create(game).Error; err != nil {
+		return nil, err
+	}
+
+	// Store the game in memory
 	gm.mutex.Lock()
 	gm.games[id] = game
 	gm.mutex.Unlock()
@@ -112,17 +120,45 @@ func (gm *GameManager) JoinGame(gameID string, playerName string) (string, error
 		game.Turn = players[0]
 	}
 
+	// Update the game in the database using a transaction
+	err := gm.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(game).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
 	return token, nil
 }
 
 // GetGame retrieves a game by ID
 func (gm *GameManager) GetGame(id string) (*models.Game, error) {
 	gm.mutex.RLock()
-	defer gm.mutex.RUnlock()
-
 	game, exists := gm.games[id]
+	gm.mutex.RUnlock()
+
 	if !exists {
-		return nil, errors.New("game not found")
+		// Try to retrieve the game from the database using a transaction
+		var dbGame models.Game
+		err := gm.db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.First(&dbGame, "id = ?", id).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, errors.New("game not found")
+		}
+
+		// Store the game in memory
+		gm.mutex.Lock()
+		gm.games[id] = &dbGame
+		gm.mutex.Unlock()
+
+		return &dbGame, nil
 	}
 
 	return game, nil
@@ -173,6 +209,17 @@ func (gm *GameManager) SetBoard(gameID string, playerName string, board *models.
 	playerInfo.TotalCapacity = totalCapacity
 	playerInfo.Capacity = totalCapacity
 	game.Players[playerName] = playerInfo
+
+	// Update the game in the database using a transaction
+	err := gm.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(game).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return board, nil
 }
@@ -228,6 +275,17 @@ func (gm *GameManager) SetPlayerReady(gameID string, playerName string) error {
 		}
 		sort.Strings(players)
 		game.Turn = players[0]
+	}
+
+	// Update the game in the database using a transaction
+	err := gm.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(game).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -348,6 +406,17 @@ func (gm *GameManager) Strike(gameID string, playerName string, targetName strin
 		game.Turn = players[nextIndex]
 	}
 
+	// Update the game in the database using a transaction
+	err := gm.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(game).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
 	if hit {
 		return "HIT", nil
 	}
@@ -357,12 +426,28 @@ func (gm *GameManager) Strike(gameID string, playerName string, targetName strin
 // GetPlayerBoard retrieves a player's board
 func (gm *GameManager) GetPlayerBoard(gameID string, playerName string) (*models.Board, error) {
 	gm.mutex.RLock()
-	defer gm.mutex.RUnlock()
-
-	// Get the game
 	game, exists := gm.games[gameID]
+	gm.mutex.RUnlock()
+
 	if !exists {
-		return nil, errors.New("game not found")
+		// Try to retrieve the game from the database using a transaction
+		var dbGame models.Game
+		err := gm.db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.First(&dbGame, "id = ?", gameID).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, errors.New("game not found")
+		}
+
+		// Store the game in memory
+		gm.mutex.Lock()
+		gm.games[gameID] = &dbGame
+		gm.mutex.Unlock()
+
+		game = &dbGame
 	}
 
 	// Check if the player exists
@@ -377,12 +462,28 @@ func (gm *GameManager) GetPlayerBoard(gameID string, playerName string) (*models
 // GetOpponentBlindBoard retrieves an opponent's blind board
 func (gm *GameManager) GetOpponentBlindBoard(gameID string, opponentName string) (*models.Board, error) {
 	gm.mutex.RLock()
-	defer gm.mutex.RUnlock()
-
-	// Get the game
 	game, exists := gm.games[gameID]
+	gm.mutex.RUnlock()
+
 	if !exists {
-		return nil, errors.New("game not found")
+		// Try to retrieve the game from the database using a transaction
+		var dbGame models.Game
+		err := gm.db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.First(&dbGame, "id = ?", gameID).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, errors.New("game not found")
+		}
+
+		// Store the game in memory
+		gm.mutex.Lock()
+		gm.games[gameID] = &dbGame
+		gm.mutex.Unlock()
+
+		game = &dbGame
 	}
 
 	// Check if the opponent exists
@@ -398,12 +499,28 @@ func (gm *GameManager) GetOpponentBlindBoard(gameID string, opponentName string)
 // GetBoardMap generates an ASCII representation of a player's board
 func (gm *GameManager) GetBoardMap(gameID string, playerName string, blind bool) (string, error) {
 	gm.mutex.RLock()
-	defer gm.mutex.RUnlock()
-
-	// Get the game
 	game, exists := gm.games[gameID]
+	gm.mutex.RUnlock()
+
 	if !exists {
-		return "", errors.New("game not found")
+		// Try to retrieve the game from the database using a transaction
+		var dbGame models.Game
+		err := gm.db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.First(&dbGame, "id = ?", gameID).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return "", errors.New("game not found")
+		}
+
+		// Store the game in memory
+		gm.mutex.Lock()
+		gm.games[gameID] = &dbGame
+		gm.mutex.Unlock()
+
+		game = &dbGame
 	}
 
 	// Check if the player exists
@@ -501,15 +618,17 @@ func validateBoard(board *models.Board, size int, requiredCapacity int) error {
 
 		// Check each coordinate
 		for _, coord := range plant.Coordinates {
+			fmt.Printf("Validating coordinate: %v\n", coord)
 			// Validate the coordinate format
 			if err := models.ValidateCoordinate(coord, size); err != nil {
-				return fmt.Errorf("INVALID_COORDINATES: %v", err)
+				fmt.Printf("Error parsing coordinate %v: %v\n", coord, err)
+				return fmt.Errorf("INVALID_COORDINATES: %v: %v", coord, err)
 			}
 
 			// Parse the coordinate
 			y, x, err := models.ParseCoordinate(coord)
 			if err != nil {
-				return fmt.Errorf("INVALID_COORDINATES: %v", err)
+				return fmt.Errorf("INVALID_COORDINATES: %v: %v", coord, err)
 			}
 
 			// Check if the coordinate is within bounds

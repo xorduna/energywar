@@ -12,6 +12,9 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/xorduna/energywar/pkg/game"
 	"github.com/xorduna/energywar/pkg/handlers"
+	"github.com/xorduna/energywar/pkg/models"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 
 	_ "github.com/xorduna/energywar/docs" // Import generated swagger docs
 )
@@ -36,8 +39,16 @@ func main() {
 	e.Use(middleware.Recover())
 	//e.Use(middleware.CORS())
 
+	// Open SQLite database
+	db, err := gorm.Open(sqlite.Open("game.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("failed to connect database: %v", err)
+	}
+
+	db.AutoMigrate(models.Game{})
+
 	// Create game manager
-	gameManager := game.NewGameManager()
+	gameManager := game.NewGameManager(db)
 
 	// Create handler
 	handler := handlers.NewHandler(gameManager)

@@ -4,9 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
-// PlantType represents the type of power plant
+// GameStatus represents the status of a game
+type GameStatus string
+
+const (
+	GameStatusPending    GameStatus = "PENDING"
+	GameStatusInProgress GameStatus = "IN_PROGRESS"
+	GameStatusEnd        GameStatus = "END"
+)
+
+// PlantType represents the type of a power plant
 type PlantType string
 
 const (
@@ -14,15 +25,6 @@ const (
 	PlantTypeGas     PlantType = "GAS"
 	PlantTypeWind    PlantType = "WIND"
 	PlantTypeSolar   PlantType = "SOLAR"
-)
-
-// GameStatus represents the status of the game
-type GameStatus string
-
-const (
-	GameStatusPending    GameStatus = "PENDING"
-	GameStatusInProgress GameStatus = "IN_PROGRESS"
-	GameStatusEnd        GameStatus = "END"
 )
 
 // Plant represents a power plant on the board
@@ -40,25 +42,26 @@ type Board struct {
 	Capacity      int      `json:"capacity"`
 }
 
-// PlayerInfo represents a player's information in the game
+// PlayerInfo represents information about a player in a game
 type PlayerInfo struct {
 	Ready         bool   `json:"ready"`
 	TotalCapacity int    `json:"total_capacity"`
 	Capacity      int    `json:"capacity"`
-	Token         string `json:"token,omitempty"`
-	Board         *Board `json:"board,omitempty"`
+	Token         string `json:"token"`
+	Board         *Board `json:"board"`
 }
 
-// Game represents a game session
+// Game represents a game
 type Game struct {
-	ID       string                `json:"id"`
+	gorm.Model
+	ID       string                `json:"id" gorm:"primaryKey"`
 	Status   GameStatus            `json:"status"`
 	Turn     string                `json:"turn"`
-	Winner   *string               `json:"winner"`
-	Players  map[string]PlayerInfo `json:"players"`
-	Size     int                   `json:"-"`
-	Capacity int                   `json:"-"`
-	Public   bool                  `json:"visibility"`
+	Winner   *string               `json:"winner,omitempty"`
+	Players  map[string]PlayerInfo `json:"players" gorm:"serializer:json"`
+	Size     int                   `json:"size"`
+	Capacity int                   `json:"capacity"`
+	Public   bool                  `json:"public"`
 }
 
 // PlantCapacity returns the capacity of a plant type
@@ -77,7 +80,7 @@ func PlantCapacity(plantType PlantType) int {
 	}
 }
 
-// PlantSize returns the size of a plant type as [width, height]
+// PlantSize returns the size of a plant type
 func PlantSize(plantType PlantType) [2]int {
 	switch plantType {
 	case PlantTypeNuclear:
@@ -117,6 +120,7 @@ func ValidateCoordinate(coord string, size int) error {
 	return nil
 }
 
+// ParseCoordinate parses a coordinate string into y and x values
 // ParseCoordinate converts a coordinate string (e.g., "A1") to [y, x] indices
 func ParseCoordinate(coord string) (int, int, error) {
 	if len(coord) < 2 {
@@ -134,24 +138,44 @@ func ParseCoordinate(coord string) (int, int, error) {
 	return y, x, nil
 }
 
-// FormatCoordinate converts [y, x] indices to a coordinate string (e.g., "A1")
-func FormatCoordinate(y, x int) string {
-	return fmt.Sprintf("%c%d", 'A'+byte(y), x+1)
+// parseCoordinatePart parses a single part of a coordinate
+func parseCoordinatePart(part string) (int, error) {
+	if len(part) == 0 {
+		return 0, errors.New("empty coordinate part")
+	}
+
+	if part[0] == 'A' {
+		return int(part[1] - '0'), nil
+	}
+
+	return 0, fmt.Errorf("invalid coordinate part: %s", part)
 }
 
-// GenerateBlindBoard generates a board with only hits and misses visible
+// GenerateBlindBoard generates a blind board for an opponent
 func (b *Board) GenerateBlindBoard() *Board {
-	return &Board{
-		Hits:          b.Hits,
-		Misses:        b.Misses,
+	blindBoard := &Board{
+		Plants:        make([]Plant, len(b.Plants)),
+		Hits:          make([]string, len(b.Hits)),
+		Misses:        make([]string, len(b.Misses)),
 		TotalCapacity: b.TotalCapacity,
 		Capacity:      b.Capacity,
 	}
+
+	copy(blindBoard.Hits, b.Hits)
+	copy(blindBoard.Misses, b.Misses)
+
+	for i, plant := range b.Plants {
+		blindBoard.Plants[i] = Plant{
+			Type:        plant.Type,
+			Coordinates: make([]string, len(plant.Coordinates)),
+		}
+	}
+
+	return blindBoard
 }
 
 // GenerateASCIIMap generates an ASCII representation of the board
 func (b *Board) GenerateASCIIMap(size int, blind bool) string {
-	// Create a 2D grid
 	grid := make([][]string, size)
 	for i := range grid {
 		grid[i] = make([]string, size)
@@ -160,69 +184,45 @@ func (b *Board) GenerateASCIIMap(size int, blind bool) string {
 		}
 	}
 
-	// Place plants if not blind
-	if !blind {
-		for _, plant := range b.Plants {
-			for _, coord := range plant.Coordinates {
-				y, x, err := ParseCoordinate(coord)
-				if err != nil {
-					continue
-				}
-				if y >= 0 && y < size && x >= 0 && x < size {
-					grid[y][x] = string(plant.Type[0])
+	for _, plant := range b.Plants {
+		for _, coord := range plant.Coordinates {
+			y, x, _ := ParseCoordinate(coord)
+			if blind {
+				grid[y][x] = "?"
+			} else {
+				switch plant.Type {
+				case PlantTypeNuclear:
+					grid[y][x] = "N"
+				case PlantTypeGas:
+					grid[y][x] = "G"
+				case PlantTypeWind:
+					grid[y][x] = "W"
+				case PlantTypeSolar:
+					grid[y][x] = "S"
 				}
 			}
 		}
 	}
 
-	// Place hits
-	for _, coord := range b.Hits {
-		y, x, err := ParseCoordinate(coord)
-		if err != nil {
-			continue
-		}
-		if y >= 0 && y < size && x >= 0 && x < size {
-			grid[y][x] = "H"
-		}
+	for _, hit := range b.Hits {
+		y, x, _ := ParseCoordinate(hit)
+		grid[y][x] = "X"
 	}
 
-	// Place misses
-	for _, coord := range b.Misses {
-		y, x, err := ParseCoordinate(coord)
-		if err != nil {
-			continue
-		}
-		if y >= 0 && y < size && x >= 0 && x < size {
-			grid[y][x] = "M"
-		}
+	for _, miss := range b.Misses {
+		y, x, _ := ParseCoordinate(miss)
+		grid[y][x] = "O"
 	}
 
-	// Generate the ASCII map
-	var sb strings.Builder
-
-	// Header row with column numbers
-	sb.WriteString("   ")
-	for i := 1; i <= size; i++ {
-		sb.WriteString(fmt.Sprintf("%d ", i))
-	}
-	sb.WriteString("\n")
-
-	// Board rows
-	for i := 0; i < size; i++ {
-		sb.WriteString(fmt.Sprintf("%c  ", 'A'+byte(i)))
-		for j := 0; j < size; j++ {
-			sb.WriteString(grid[i][j] + " ")
+	var result strings.Builder
+	for _, row := range grid {
+		for _, cell := range row {
+			result.WriteString(cell)
 		}
-		sb.WriteString("\n")
+		result.WriteString("\n")
 	}
 
-	return sb.String()
-}
-
-// ErrorResponse represents an error response
-type ErrorResponse struct {
-	Status string `json:"status"`
-	Error  string `json:"error"`
+	return result.String()
 }
 
 // StrikeResponse represents a strike response
@@ -234,4 +234,10 @@ type StrikeResponse struct {
 // ReadyResponse represents a ready response
 type ReadyResponse struct {
 	Result string `json:"result"`
+}
+
+// ErrorResponse represents an error response
+type ErrorResponse struct {
+	Status string `json:"status"`
+	Error  string `json:"error"`
 }
