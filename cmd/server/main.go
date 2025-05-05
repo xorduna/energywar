@@ -2,17 +2,21 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/xorduna/energywar/pkg/config"
 	"github.com/xorduna/energywar/pkg/game"
 	"github.com/xorduna/energywar/pkg/handlers"
 	"github.com/xorduna/energywar/pkg/models"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -30,7 +34,52 @@ var frontendFS embed.FS
 // @version 1.0
 // @description API for the Energy War Game
 // @BasePath /api
+
+// openDatabase opens a database connection based on the configuration
+func openDatabase(cfg *config.Config) (*gorm.DB, error) {
+	uri := strings.TrimSpace(cfg.Database.URI)
+
+	var dialector gorm.Dialector
+	switch {
+	case uri == ":memory:" || uri == "file::memory:?cache=shared" || strings.HasPrefix(uri, "file:"):
+		// Handle SQLite cases
+		if uri == ":memory:" || uri == "file::memory:?cache=shared" {
+			dialector = sqlite.Open("file::memory:?cache=shared")
+		} else {
+			// Ensure file paths are handled correctly
+			if !strings.HasPrefix(uri, "file:") && !strings.HasSuffix(uri, ".db") {
+				uri = "file:" + uri
+			}
+			if !strings.HasSuffix(uri, ".db") {
+				uri += ".db"
+			}
+			dialector = sqlite.Open(uri)
+		}
+	case strings.HasPrefix(uri, "postgres://"):
+		// Handle PostgreSQL
+		dialector = postgres.Open(uri)
+	default:
+		// Default to SQLite file
+		dialector = sqlite.Open("file:game.db")
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect database: %v", err)
+	}
+
+	fmt.Printf("Connected to database: %s\n", uri)
+
+	return db, nil
+}
+
 func main() {
+	// Load configuration
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("failed to load configuration: %v", err)
+	}
+
 	// Create a new Echo instance
 	e := echo.New()
 
@@ -39,12 +88,13 @@ func main() {
 	e.Use(middleware.Recover())
 	//e.Use(middleware.CORS())
 
-	// Open SQLite database
-	db, err := gorm.Open(sqlite.Open("game.db"), &gorm.Config{})
+	// Open database
+	db, err := openDatabase(cfg)
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
 
+	// Auto migrate database models
 	db.AutoMigrate(models.Game{})
 
 	// Create game manager
@@ -95,5 +145,5 @@ func main() {
 	}
 
 	// Start server
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(cfg.Server.Port))
 }
